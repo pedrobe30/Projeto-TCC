@@ -69,7 +69,7 @@ export default function Cad() {
                         </View>
                         <View style={styles.minicontainer}>
                             <Text style={styles.texto}>
-                            <Foundation style={styles.alert} name="alert" size={24} color="black" /> APENAS E-MAIL INSTITUCIONAL <Foundation style={styles.alert} name="alert" size={24} color="black" />
+                            <Foundation style={styles.alert} name="alert" size={24} color="black" /> APENAS E-MAIL INSTITUCIONAL 
                             </Text>
 
                                 {errors.Nome && <Text style={styles.error}>{errors.Nome?.message}</Text>}
@@ -144,7 +144,7 @@ export default function Cad() {
                                 colors={["#740000", "#000000", ]}
                                  style={styles.button}
                                                     >         
-                            <Text style={styles.txtBtn}>CADASTRA-SE</Text>
+                            <Text style={styles.txtBtn}>Entrar</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                         
@@ -153,9 +153,9 @@ export default function Cad() {
                         </View>
 
                         <View style={styles.conta}>
-                            <Text style={styles.txtConta}>Ja possui uma conta?</Text>
+                            <Text style={styles.txtConta}>não possui uma conta?</Text>
                             <TouchableOpacity style={styles.btnlogin} onPress={() => navigation.navigate('Login')}>
-                            <Text style={styles.txtlogin}>Login</Text>
+                            <Text style={styles.txtlogin}>Cadastro</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
