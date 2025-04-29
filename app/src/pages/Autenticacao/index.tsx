@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, SafeAreaView, StyleSheet, Image, StatusBar, TextInput, Touchable, TouchableOpacity, ScrollView } from "react-native";
+import { Text, View, SafeAreaView, StyleSheet, Image, StatusBar, TextInput, Touchable, TouchableOpacity, ScrollView, Alert } from "react-native";
 import {useForm, Controller} from 'react-hook-form';
 import *as yup from 'yup'
 import {yupResolver} from '@hookform/resolvers/yup'
@@ -7,6 +7,9 @@ import {Foundation} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { criarAluno } from '../../services/alunoService';
+import { enviarCodigo } from '../../services/authService';
+
 
 const scheme = yup.object({
     Nome: yup.string().required('Informe seu nome'),
@@ -23,6 +26,12 @@ const scheme = yup.object({
 
 export default function Cad() {
     const navigation = useNavigation();
+
+    const [nome, setNome] = useState('');
+    const [rm, setRm] = useState('');
+    const [email, setEmail] = useState('');
+    const [senha, setSenha] = useState('');
+    const [escola, setEscola] = useState('');
     
 
 
@@ -32,9 +41,50 @@ export default function Cad() {
 
         })
 
-        const handlSignIn = (data) => {
-        console.log(data);
-        };
+        const handleEnviar = async () => 
+        {
+            try {
+                const resultado = await criarAluno({
+                    NomeAlu: nome,
+                    Rm: rm,
+                    EmailAlu: email,
+                    SenhaAlu: senha,
+                    IdEsc: escola   
+                });
+    
+            
+
+            if (!resultado.status) {
+                Alert.alert('Erro', resultado.Mensagem);
+                return;
+              }
+
+            const resultadoEnvio = await enviarCodigo(email);
+
+            if (resultadoEnvio.status)
+            {
+                Alert.alert('Sucesso', 'Aluno cadastrado e codigo enviado! verifique seu email.');
+
+                navigation.navigate('CodeVerification');
+                 
+            } 
+            else 
+            {
+                Alert.alert('Aviso', resultadoEnvio.Mensagem)
+            }
+        }
+            catch (error)
+            {
+                Alert.alert('Erro', error.message )
+            }
+        
+        }
+    
+    
+
+         const handlSignIn = (data) => {
+         console.log(data);
+         };
 
        
             const [icone, setIcone] = useState('eye-off');
@@ -77,29 +127,36 @@ export default function Cad() {
                             <Controller
                                     control={control}
                                     name="Nome"
-                                    render={({ field: { onChange, onBlur, value } }) => (
+                                    render={({ field: {onBlur} }) => (
                                 <TextInput
                                         style={styles.input}
-                                        onChangeText={onChange} 
-                                        value={value}          
+                                        onChangeText={setNome} 
+                                        value={nome}          
                                         placeholder="     Nome"
                                         onBlur={onBlur}        
                                      />
                                              )}
                                 />
 
-                                
+                                <TextInput
+                                    style={styles.input}
+                                    onChangeText={setRm}
+                                    value={rm}
+                                    placeholder='          Rm'
+                                    keyboardType="numeric"
+                                    />
                         
                         <Controller
                         control={control}
                         name="email"
-                        render={({ field: { onChange, onBlur, value } }) => (
+                        render={({ field: {onBlur} }) => (
                             <TextInput
                                 style={styles.input}
-                                onChangeText={onChange}
-                                value={value}
+                                onChangeText={setEmail}
+                                value={email}
                                 placeholder="     Email"
                                 onBlur={onBlur} 
+                                keyboardType='email-address'
                                 
                                 />
                                             )} 
@@ -110,7 +167,7 @@ export default function Cad() {
                         <Controller
                             control={control}
                             name="senha"
-                            render={({ field: { onChange, onBlur, value } }) => (
+                            render={({ field: {onBlur} }) => (
                                 <View style={styles.inputContainer}>
                               <TouchableOpacity style={styles.icon}
                               onPress={handleClick}>
@@ -118,16 +175,20 @@ export default function Cad() {
         </TouchableOpacity>
                                 <TextInput
                                     style={styles.input}
-                                    onChangeText={onChange}
-                                    value={value}
+                                    onChangeText={setSenha}
+                                    value={senha}
                                     placeholder="    Crie sua Senha"
                                     onBlur={onBlur}
-                                    secureTextEntry={icone === 'eye-off'}
-                                   
-                                   
-                                    
-
+                                    secureTextEntry={icone === 'eye-off'} 
                                     />
+
+                                <TextInput
+                                    style={styles.input}
+                                    onChangeText={setEscola}
+                                    value={escola}
+                                    placeholder='Escola em que estuda?'
+                                     />
+                                     
                                     </View>
                                         )} 
                             />
@@ -136,10 +197,9 @@ export default function Cad() {
                        
 
                             <TouchableOpacity style={styles.btn}
-                             onPress={handleSubmit((data) => 
-                            {handlSignIn(data);
-                            navigation.navigate('Login'); 
-                            })}>
+                             onPress={handleEnviar}
+                                    
+                            >
                                 <LinearGradient
                                 colors={["#740000", "#000000", ]}
                                  style={styles.button}

@@ -4,16 +4,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Autenticacao from './app/src/pages/Autenticacao';
 import Login from './app/src/pages/Login';
 import Home from './app/src/pages/Home';
+import CodeVerification from './app/src/pages/Autenticacao/codeverify';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Autenticacao">
+      <Stack.Navigator initialRouteName="CodeVerification">
         <Stack.Screen name="Autenticacao" component={Autenticacao} />
         <Stack.Screen name='Login' component={Login} />
         <Stack.Screen name='Home' component={Home} />
+        <Stack.Screen name='CodeVerification' component={CodeVerification} />
       </Stack.Navigator>
     </NavigationContainer>
   );
