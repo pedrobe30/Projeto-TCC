@@ -1,22 +1,188 @@
-import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Button, Image } from "react-native";
+import React, { useState } from 'react';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Keyboard,
+  Animated,
+  SafeAreaView,
+  ScrollView,
+  Image
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+// import SimpleCarousel  from './SimpleCarousel'
+
+// const { width } = Dimensions.get('window')
 
 export default function Home() {
-    return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView>
-                <View style={styles.container}>
-                    <Text>Home</Text>
-                    {/* <Image source={require('../../assets/bv.png')} /> */}
-                    
-                </View>
-            </ScrollView>
-        </SafeAreaView>
-    );
+  // Estados e funções para a pesquisa
+  const [consulta, setConsulta] = useState('');
+  const [isFoco, setIsFoco] = useState(false);
+  const animacao = new Animated.Value(0);
+  
+  // Placeholder para a função de pesquisa que você pode implementar conforme sua necessidade
+  const onPesquisa = (texto) => {
+    console.log("Pesquisando por:", texto);
+    // Implemente a lógica de pesquisa aqui
+  };
+
+  const handleFoco = () => {
+    setIsFoco(true);
+    Animated.timing(animacao, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: false
+    }).start();
+  };
+
+  const handleBlur = () => {
+    setIsFoco(false);
+    Animated.timing(animacao, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleBusca = () => {
+    if (consulta.trim()) {
+      onPesquisa(consulta);
+      Keyboard.dismiss();
+    }
+  };
+
+  const clearSearch = () => {
+    setConsulta('');
+    onPesquisa('');
+  };
+
+  // Interpolações de animação
+  const borderColor = animacao.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#e0e0e0', '#3498db'],
+  });
+
+  const shadowOpacity = animacao.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.1, 0.3],
+  });
+
+  // Renderização do componente
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            
+          </View>
+          <Image 
+            style={styles.logo} 
+            source={require('../../assets/Vestetec-removebg-preview.png')} 
+          /> 
+        </View>
+
+        {/* Barra de pesquisa */}
+        <Animated.View 
+          style={[
+            styles.barra, 
+            {
+              borderColor: borderColor,
+              shadowOpacity: shadowOpacity,
+            }
+          ]}
+        >
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={isFoco ? '#3498db' : '#888'}
+            style={styles.IconePesquisa}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="O que Procura?"
+            value={consulta}
+            onChangeText={setConsulta}
+            onFocus={handleFoco}
+            onBlur={handleBlur}
+            onSubmitEditing={handleBusca}
+            returnKeyType="search"
+          />
+          {consulta.length > 0 && (
+            <TouchableOpacity onPress={clearSearch} style={styles.LimparBarra}>
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color="#888"
+              />
+            </TouchableOpacity>
+          )}
+          {isFoco && (
+            <TouchableOpacity onPress={handleBusca} style={styles.PesquisaButton}>
+              <View style={styles.searchButtonContainer}>
+                <Ionicons name="arrow-forward" size={16} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          )}
+        </Animated.View>
+        
+     
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    padding: 10,
+  },
+  logo: {
+    width: 150,
+    height: 50,
+    alignSelf: 'center',
+    resizeMode: 'contain',
+    marginVertical: 10,
+  },
+  barra: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    marginVertical: 10,
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  IconePesquisa: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontSize: 16,
+    color: '#333',
+  },
+  LimparBarra: {
+    paddingHorizontal: 5,
+  },
+  PesquisaButton: {
+    marginLeft: 10,
+  },
+  searchButtonContainer: {
+    backgroundColor: '#3498db',
+    borderRadius: 20,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

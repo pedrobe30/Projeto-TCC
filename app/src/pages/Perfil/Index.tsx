@@ -3,8 +3,9 @@ import { useNavigation } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-const navigation = useNavigation(); // Inicializa o hook de navegaçã
+
 export default function Perfil() {  
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>

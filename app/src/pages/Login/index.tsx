@@ -1,313 +1,300 @@
 import React, { useState } from 'react';
-import { Text, View, SafeAreaView, StyleSheet, Image, StatusBar, TextInput, Touchable, TouchableOpacity, ScrollView } from "react-native";
-import {useForm, Controller} from 'react-hook-form';
-import *as yup from 'yup'
-import {yupResolver} from '@hookform/resolvers/yup'
-import {Foundation} from '@expo/vector-icons';
-import {useNavigation} from '@react-navigation/native'
+import { Text, View, SafeAreaView, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { useForm, Controller } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { login } from '../../services/authService';
+
+// Schema de validação do formulário
+const schema = yup.object({
+  email: yup.string().email('Email inválido').required('Informe seu email'),
+  senha: yup.string().required('Informe sua senha')
+});
 
 export default function Login() {
-
-  const scheme = yup.object({
-    Nome: yup.string().required('Informe seu nome'),
-    email: yup.string().email('Email Invalido').required('Informe seu Email'),
-    senha: yup.string()
-    .min(6, 'No minimo 6 digitos')
-    .matches(/\d/,'Um numero pelo menos')
-    .required('Informe sua Senha')
-    
-    
-})
-
-
   const navigation = useNavigation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
+  // Configuração do React Hook Form com validação Yup
+  const { control, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      email: '',
+      senha: ''
+    }
+  });
 
+  // Função para lidar com o envio do formulário
+  const onSubmit = async (data) => {
+    try {
+      setIsLoading(true);
+      console.log('Dados do formulário:', data); // Debug log
+      
+      // Chama o endpoint de login
+      const resultado = await login({
+        email: data.email,
+        senha: data.senha
+      });
 
-  const {control, handleSubmit, formState: {errors} } = useForm({
+      console.log('Resultado login:', resultado); // Debug log
 
-      resolver: yupResolver(scheme)
-
-      })
-
-      const handlSignIn = (data) => {
-      console.log(data);
-      };
-
-     
-          const [icone, setIcone] = useState('eye-off');
+      if (resultado && resultado.status) {
+        // Armazenar o token ou fazer outras operações necessárias
+        // Por exemplo, armazenar em AsyncStorage ou similar
         
-          const handleClick = () => {
-            if (icone === 'eye-off') {
-              setIcone('eye');
-            } else {
-              setIcone('eye-off');
-            }
-          }
-          
+        // Navegar para a página principal ou home
+        navigation.navigate('Home'); // Substitua 'Home' pelo nome da sua rota principal
+      } else {
+        Alert.alert('Erro', resultado?.Mensagem || 'Credenciais inválidas. Verifique seu email e senha.');
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      Alert.alert('Erro', error.message || 'Ocorreu um erro ao fazer login.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-
-        
-    <SafeAreaView style={{flex: 1}}>
-         <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.container}>
-            <View style={styles.bemvindo}>
-                <Image source={require('../../assets/bv.png')}
-                style={styles.bv}></Image>
-            </View>
-            <View style={styles.logo}>
-                <Image
-               source={require('../../assets/Vestetec-removebg-preview.png')}
-                style={styles.image} 
-                        />
-                
-            </View>
-            <View style={styles.minicontainer}>
-                <Text style={styles.texto}>
-                <Foundation style={styles.alert} name="alert" size={24} color="black" /> APENAS E-MAIL INSTITUCIONAL 
-                </Text>
+          {/* Boas vindas */}
+          <View style={styles.bemvindo}>
+            <Image source={require('../../assets/bv.png')} style={styles.bv} />
+          </View>
+          
+          {/* Logo */}
+          <View style={styles.logo}>
+            <Image
+              source={require('../../assets/Vestetec-removebg-preview.png')}
+              style={styles.image}
+            />
+          </View>
+          
+          {/* Container do formulário */}
+          <View style={styles.minicontainer}>
+            <Text style={styles.texto}>
+              Bem-vindo de volta!
+            </Text>
 
-                    {errors.Nome && <Text style={styles.error}>{errors.Nome?.message}</Text>}
-                    
-                <Controller
-                        control={control}
-                        name="Nome"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                            style={styles.input}
-                            onChangeText={onChange} 
-                            value={value}          
-                            placeholder="     Nome"
-                            onBlur={onBlur}        
-                         />
-                                 )}
-                    />
-
-                    
-            
+            {/* Campo Email */}
             <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
+                  style={styles.input}
+                  onChangeText={onChange}
+                  value={value}
+                  placeholder="     Email"
+                  keyboardType="email-address"
+                  onBlur={onBlur}
+                  autoCapitalize="none"
+                />
+              )}
+            />
+            {errors.email && <Text style={styles.error}>{errors.email?.message}</Text>}
+
+            {/* Campo Senha */}
+            <Controller
+              control={control}
+              name="senha"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <TextInput
                     style={styles.input}
                     onChangeText={onChange}
                     value={value}
-                    placeholder="     Email"
-                    onBlur={onBlur} 
-                    
+                    placeholder="     Senha"
+                    secureTextEntry={!showPassword}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    style={styles.icon}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Ionicons 
+                      name={showPassword ? 'eye' : 'eye-off'} 
+                      size={34} 
+                      color="black" 
                     />
-                                )} 
-                />
-                {errors.email && <Text style={styles.error}>{errors.email?.message}</Text>}
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+            {errors.senha && <Text style={styles.error}>{errors.senha?.message}</Text>}
 
-                        
-            <Controller
-                control={control}
-                name="senha"
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={styles.inputContainer}>
-                  <TouchableOpacity style={styles.icon}
-                  onPress={handleClick}>
-<Ionicons name={icone} size={34} color="black" />
-</TouchableOpacity>
-                    <TextInput
-                        style={styles.input}
-                        onChangeText={onChange}
-                        value={value}
-                        placeholder="    Crie sua Senha"
-                        onBlur={onBlur}
-                        secureTextEntry={icone === 'eye-off'}
-                       
-                       
-                        
-
-                        />
-                        </View>
-                            )} 
-                />
-                {errors.senha && <Text style={styles.error}>{errors.senha?.message}</Text>}
-                
-           
-
-                <TouchableOpacity style={styles.btn}
-                 onPress={handleSubmit((data) => 
-                {handlSignIn(data);
-                navigation.navigate('Autenticacao'); 
-                })}>
-                    <LinearGradient
-                    colors={["#740000", "#000000", ]}
-                     style={styles.button}
-                                        >         
-                <Text style={styles.txtBtn}>CADASTRA-SE</Text>
-                </LinearGradient>
+            {/* Esqueci minha senha */}
+            <TouchableOpacity
+              // style={styles.forgotPassword}
+            //  onPress={() => navigation.navigate('RecuperarSenha')}
+            >
+              <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
             </TouchableOpacity>
-            
-                
-            
-            </View>
 
-            <View style={styles.conta}>
-                <Text style={styles.txtConta}>Ja possui uma conta?</Text>
-                <TouchableOpacity style={styles.btnlogin} onPress={() => navigation.navigate('Autenticacao')}>
-                <Text style={styles.txtlogin}>Login</Text>
-                </TouchableOpacity>
-            </View>
+            {/* Botão de Login */}
+            <TouchableOpacity 
+              style={styles.btn}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isLoading}
+            >
+              <LinearGradient
+                colors={["#740000", "#000000"]}
+                style={styles.button}
+              >
+                <Text style={styles.txtBtn}>
+                  {isLoading ? 'Entrando...' : 'Entrar'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Link para Cadastro */}
+          <View style={styles.conta}>
+            <Text style={styles.txtConta}>Ainda não tem uma conta?</Text>
+            <TouchableOpacity 
+              style={styles.btnlogin} 
+              onPress={() => navigation.navigate('Autenticacao')}
+            >
+              <Text style={styles.txtlogin}>Cadastre-se</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        </ScrollView>
+      </ScrollView>
     </SafeAreaView>
-
-);
+  );
 }
 
-const styles= StyleSheet.create({
-container: {
-flexGrow: 1,
-width: '100%',
-height: '100%',
-backgroundColor:  '#340000',
-justifyContent: 'center',
-alignItems: 'center',
-
-
-},
-bemvindo: {
-alignItems: 'center',
-justifyContent: 'center',
-
-
-
-
-},
-bv: {
-height: 100,
-width: 320,
-zIndex: 4,
-top: -30
-},
-
-minicontainer: {
-backgroundColor: 'white',
-width: 360,
-height: 525,
-zIndex: 1
-},
-image: {
-width: 360,
-zIndex: 2,
-left: 7
-},
-logo: {
-height: 61,
-zIndex: 3
-}, 
-texto: {
-marginTop: 120,
-margin: 49,
-fontWeight: 'bold'
-
-},
-
-alert: {
-alignItems: 'center',
-
-
-},
-
-input: {
-margin: 10,
-backgroundColor: '#c7c7c7',
-height: 40,
-marginBottom: 14,
-marginTop: 4,
-borderWidth: 1,
-borderRadius: 6,
-borderColor: '#390000',
-fontSize: 14,
-paddingLeft: 15
-
-
-}, 
-btn: {
-backgroundColor: 'black',
-color: 'white',
-width: 320,
-height: 70,
-left: 22,
-marginTop: 24,
-alignItems: 'center',
-borderRadius: 10,
-
-
-},
-txtBtn: {
-color: 'white',
-fontSize: 22,
-alignItems: 'center',
-justifyContent: 'center',
-flex: 1,
-margin: 20,
-fontWeight: 'bold'
-},
-button: {
-width: 320,
-height: 70,
-alignItems: 'center',
-borderRadius: 10,
-},
-
-error: {
-color: '#ce2340',
-alignSelf: 'flex-start',
-marginBottom: 5,
-left: 15,
-fontSize: 14,
-marginTop: -5
-}, 
-
-inputContainer: {
-
-},
-icon: {
-position: 'absolute',
-left: 300,
-top: 7,
-zIndex: 1
-},
-
-conta: {
-alignItems: 'center',
-justifyContent: 'center',
-marginTop: 50
-},
-
-txtConta: {
-color: 'white',
-fontSize: 16,
-fontWeight: 'bold',
-},
-
-btnlogin: {
-backgroundColor: 'black',
-width: 120,
-height: 50,
-margin: 10,
-alignItems: 'center',
-borderRadius: 18,
-},
-
-txtlogin: {
-color: 'white',
-fontSize: 18,
-alignItems: 'center',
-justifyContent: 'center',
-flex: 1,
-margin: 14,
-fontWeight: 'bold'
-}
-
-
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#340000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bemvindo: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bv: {
+    height: 100,
+    width: 320,
+    zIndex: 4,
+    top: -30
+  },
+  minicontainer: {
+    backgroundColor: 'white',
+    width: 360,
+    height: 'auto',
+    paddingVertical: 20,
+    zIndex: 1
+  },
+  image: {
+    width: 360,
+    zIndex: 2,
+    left: 7
+  },
+  logo: {
+    height: 61,
+    zIndex: 3
+  },
+  texto: {
+    marginTop: 20,
+    margin: 49,
+    fontWeight: 'bold',
+    fontSize: 20,
+    textAlign: 'center'
+  },
+  input: {
+    margin: 10,
+    backgroundColor: '#c7c7c7',
+    height: 40,
+    marginBottom: 14,
+    marginTop: 4,
+    borderWidth: 1,
+    borderRadius: 6,
+    borderColor: '#390000',
+    fontSize: 14,
+    paddingLeft: 15
+  },
+  inputContainer: {
+    position: 'relative',
+  },
+  icon: {
+    position: 'absolute',
+    right: 20,
+    top: 13,
+    zIndex: 1
+  },
+  error: {
+    color: '#ce2340',
+    alignSelf: 'flex-start',
+    marginLeft: 15,
+    fontSize: 14,
+    marginTop: -10,
+    marginBottom: 5
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginRight: 15,
+    marginTop: 5,
+    marginBottom: 15
+  },
+  forgotPasswordText: {
+    color: '#740000',
+    fontSize: 14,
+    fontWeight: '500'
+  },
+  btn: {
+    width: 320,
+    height: 70,
+    alignSelf: 'center',
+    marginTop: 24,
+    borderRadius: 10,
+  },
+  button: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  txtBtn: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold'
+  },
+  conta: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+    marginBottom: 20
+  },
+  txtConta: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  btnlogin: {
+    backgroundColor: 'black',
+    width: 120,
+    height: 50,
+    margin: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+  },
+  txtlogin: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold'
+  }
 });
