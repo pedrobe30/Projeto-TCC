@@ -21,22 +21,22 @@ export default function Perfil() {
       <View style={styles.menu}>
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuText}>Meu Carrinho</Text>
-          <Ionicons name="cart-outline" size={24} color="#000" />
+          <Ionicons name="cart-outline" size={24} color="#FFF" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuText}>Minhas Encomendas</Text>
-          <MaterialIcons name="inventory" size={24} color="#000" />
+          <MaterialIcons name="inventory" size={24} color="#FFF" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuText}>Fale Conosco</Text>
-          <Ionicons name="help-circle-outline" size={24} color="#000" />
+          <Ionicons name="help-circle-outline" size={24} color="#FFF" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuText}>Sair</Text>
-          <Ionicons name="exit-outline" size={24} color="#000" />
+          <Ionicons name="exit-outline" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
 
@@ -62,17 +62,18 @@ export default function Perfil() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E57373',
+    backgroundColor: '#000000',
   },
   header: {
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: '#C62828',
+    backgroundColor: '#8C1111',
   },
   profileIcon: {
     marginBottom: 10,
   },
   greeting: {
+
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
@@ -80,26 +81,28 @@ const styles = StyleSheet.create({
   menu: {
     flex: 1,
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 100,
   },
   menuItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFCDD2',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+    backgroundColor: 'transparent',
+    padding: 20,
+    borderRadius: 40,
+    marginBottom: 50,
+    borderColor: '#fff',
+    borderWidth: 3
   },
   menuText: {
     fontSize: 16,
-    color: '#000',
+    color: '#fff',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#C62828',
+    backgroundColor: '#8C1111',
     paddingVertical: 10,
   },
   footerButton: {
