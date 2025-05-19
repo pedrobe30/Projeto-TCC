@@ -216,20 +216,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    marginTop: 0
+ 
+    position: 'relative',
+    bottom: 87
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 0
+    position: 'relative',
+    bottom: 0,
+   
   },
 
  
   listContainer: {
     flexGrow: 1,
     paddingBottom: 16,
+    
   },
   separator: {
     height: 16,
@@ -238,6 +242,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   loadingText: {
     marginTop: 16,

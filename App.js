@@ -7,13 +7,14 @@ import Home from './app/src/pages/Home';
 import Perfil from './app/src/pages/Perfil/Index';
 import VerificationPage from './app/src/pages/Autenticacao/codeverify';
 import ProductListScreen from './app/src/pages/Produtos';
+import Categoria from './app/src/pages/Home/Categorias';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Produtos"> 
+      <Stack.Navigator initialRouteName="Categoria"> 
         <Stack.Screen name="Autenticacao" component={Autenticacao} options={{headerShow: false}}/>
         <Stack.Screen name='Login' component={Login} options={{headerShow: false}}/>
         <Stack.Screen name='Home' component={Home} options={{headerShow: false}}/>
@@ -22,6 +23,7 @@ export default function App() {
         <Stack.Screen name='Produtos' component={ProductListScreen} 
          options={{ headerShown: false }}
          />
+         <Stack.Screen name='Categoria' component={Categoria} options={{headerShown: false}}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

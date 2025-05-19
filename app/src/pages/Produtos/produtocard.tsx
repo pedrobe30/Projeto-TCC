@@ -78,7 +78,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginLeft: 50,
     height: 270,
-    width: 250
+    width: 250,
+    
   },
   contImage:
   {
