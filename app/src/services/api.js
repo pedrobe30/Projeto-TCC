@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5260/api/Aluno';
+const API_URL = 'https://localhost:7024/api/Aluno';
 
 const api = axios.create({
     baseURL: API_URL,
