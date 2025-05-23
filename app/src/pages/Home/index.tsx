@@ -11,20 +11,18 @@ import {
   Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// import SimpleCarousel  from './SimpleCarousel'
-
-// const { width } = Dimensions.get('window')
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function Home() {
-  // Estados e funções para a pesquisa
   const [consulta, setConsulta] = useState('');
   const [isFoco, setIsFoco] = useState(false);
   const animacao = new Animated.Value(0);
-  
-  // Placeholder para a função de pesquisa que você pode implementar conforme sua necessidade
+
+  const navigation = useNavigation();
+  const route = useRoute();
+
   const onPesquisa = (texto) => {
     console.log("Pesquisando por:", texto);
-    // Implemente a lógica de pesquisa aqui
   };
 
   const handleFoco = () => {
@@ -57,7 +55,6 @@ export default function Home() {
     onPesquisa('');
   };
 
-  // Interpolações de animação
   const borderColor = animacao.interpolate({
     inputRange: [0, 1],
     outputRange: ['#e0e0e0', '#3498db'],
@@ -68,66 +65,93 @@ export default function Home() {
     outputRange: [0.1, 0.3],
   });
 
-  // Renderização do componente
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.container}>
-          <View style={styles.header}>
-            
-          </View>
+      <View style={{ flex: 1, paddingBottom: 80 }}> {/* Adiciona espaço pro footer */}
+        <ScrollView>
+          <View style={styles.header}></View>
+
           <Image 
             style={styles.logo} 
             source={require('../../assets/Vestetec-removebg-preview.png')} 
           /> 
-        </View>
 
-        {/* Barra de pesquisa */}
-        <Animated.View 
-          style={[
-            styles.barra, 
-            {
-              borderColor: borderColor,
-              shadowOpacity: shadowOpacity,
-            }
-          ]}
+          <Animated.View 
+            style={[
+              styles.barra, 
+              {
+                borderColor: borderColor,
+                shadowOpacity: shadowOpacity,
+              }
+            ]}
+          >
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color={isFoco ? '#3498db' : '#888'}
+              style={styles.IconePesquisa}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="O que Procura?"
+              value={consulta}
+              onChangeText={setConsulta}
+              onFocus={handleFoco}
+              onBlur={handleBlur}
+              onSubmitEditing={handleBusca}
+              returnKeyType="search"
+            />
+            {consulta.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} style={styles.LimparBarra}>
+                <Ionicons name="close-circle" size={18} color="#888" />
+              </TouchableOpacity>
+            )}
+            {isFoco && (
+              <TouchableOpacity onPress={handleBusca} style={styles.PesquisaButton}>
+                <View style={styles.searchButtonContainer}>
+                  <Ionicons name="arrow-forward" size={16} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </View>
+
+      {/* Footer fixo */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate('Home')}
         >
           <Ionicons
-            name="search-outline"
-            size={20}
-            color={isFoco ? '#3498db' : '#888'}
-            style={styles.IconePesquisa}
+            name="home-outline"
+            size={28}
+            color={route.name === 'Home' ? '#FFD700' : '#fff'}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="O que Procura?"
-            value={consulta}
-            onChangeText={setConsulta}
-            onFocus={handleFoco}
-            onBlur={handleBlur}
-            onSubmitEditing={handleBusca}
-            returnKeyType="search"
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate('Categoria')}
+        >
+          <Ionicons
+            name="grid-outline"
+            size={28}
+            color={route.name === 'Categoria' ? '#FFD700' : '#fff'}
           />
-          {consulta.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} style={styles.LimparBarra}>
-              <Ionicons
-                name="close-circle"
-                size={18}
-                color="#888"
-              />
-            </TouchableOpacity>
-          )}
-          {isFoco && (
-            <TouchableOpacity onPress={handleBusca} style={styles.PesquisaButton}>
-              <View style={styles.searchButtonContainer}>
-                <Ionicons name="arrow-forward" size={16} color="#fff" />
-              </View>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-        
-     
-      </ScrollView>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate('Perfil')}
+        >
+          <Ionicons
+            name="person-circle-outline"
+            size={28}
+            color={route.name === 'Perfil' ? '#FFD700' : '#fff'}
+          />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -184,5 +208,25 @@ const styles = StyleSheet.create({
     padding: 7,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    backgroundColor: '#808080',
+    paddingVertical: 10,
+    borderRadius: 30,
+    width: '80%',
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: 0,
+  },
+  footerButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    borderRadius: 50,
+    width: 45,
+    height: 45,    
   },
 });

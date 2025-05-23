@@ -1,22 +1,14 @@
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-
 export default function Perfil() {  
   const navigation = useNavigation();
+  const route = useRoute(); // pega a rota atual
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.profileIcon}>
-          <Ionicons name="person-circle-outline" size={80} color="#fff" />
-        </View>
-        <Text style={styles.greeting}>OLÁ, "nome do aluno"</Text>
-      </View>
-
       {/* Menu Options */}
       <View style={styles.menu}>
         <TouchableOpacity style={styles.menuItem}>
@@ -40,19 +32,39 @@ export default function Perfil() {
         </TouchableOpacity>
       </View>
 
-      {/* Footer Navigation */}
+      {/* Footer Navigation com Perfil incluído */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.footerButton}
-          //onPress={() => navigation.navigate('Home')} // Navega para a tela Home
+          onPress={() => navigation.navigate('Home')}
         >
-          <Ionicons name="home-outline" size={28} color="#fff" />
+          <Ionicons
+            name="home-outline"
+            size={28}
+            color={route.name === 'Home' ? '#FFD700' : '#fff'}
+          />
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.footerButton}
-          //onPress={() => navigation.navigate('Categoria')} // Navega para a tela Categoria
+          onPress={() => navigation.navigate('Categoria')}
         >
-          <Ionicons name="grid-outline" size={28} color="#fff" />
+          <Ionicons
+            name="grid-outline"
+            size={28}
+            color={route.name === 'Categoria' ? '#FFD700' : '#fff'}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate('Perfil')}
+        >
+          <Ionicons
+            name="person-circle-outline"
+            size={28}
+            color={route.name === 'Perfil' ? '#FFD700' : '#fff'}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -63,20 +75,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
-  },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#8C1111',
-  },
-  profileIcon: {
-    marginBottom: 10,
-  },
-  greeting: {
-
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
   },
   menu: {
     flex: 1,
@@ -92,7 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginBottom: 50,
     borderColor: '#fff',
-    borderWidth: 3
+    borderWidth: 3,
   },
   menuText: {
     fontSize: 16,
@@ -100,12 +98,22 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     backgroundColor: '#8C1111',
     paddingVertical: 10,
+    borderRadius: 30,
+    width: '80%',
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: 0,
   },
   footerButton: {
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    borderRadius: 50,
+    width: 45,
+    height: 45,
   },
 });

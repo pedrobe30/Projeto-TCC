@@ -156,11 +156,39 @@ export default function Categorias() {
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
+<<<<<<< HEAD:app/src/pages/Home/Categorias/index.tsx
       <SafeAreaView style={styles.safeArea}>
         <Image 
           source={require("../../../assets/Vestetec-removebg-preview.png")} 
           style={styles.logo}
         />
+=======
+    <SafeAreaView>
+
+    <Image source={require("../../assets/Vestetec-removebg-preview.png")} style={styles.logo}></Image>
+
+      <LinearGradient
+      colors={['#740000', '#2F0202']}
+      locations={[0.15, 0.91]} // 22% e 100%
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      >
+
+     <View style={styles.categoria}>
+
+        {categories.map(cat => (
+          <TouchableOpacity
+            key={cat.id}
+            style={styles.card}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cardText}>{cat.title}</Text>
+          </TouchableOpacity>
+        ))}
+
+        </View>
+      </LinearGradient>
+>>>>>>> 07f9e67d5999ecbce226320e46a157133e6e001c:app/src/pages/Categorias/index.tsx
         
         <Text style={styles.title}>Categorias</Text>
         
