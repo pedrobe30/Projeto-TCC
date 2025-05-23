@@ -31,7 +31,7 @@ export default function Categorias()
     >
     <SafeAreaView>
 
-    <Image source={require("../../../assets/Vestetec-removebg-preview.png")} style={styles.logo}></Image>
+    <Image source={require("../../assets/Vestetec-removebg-preview.png")} style={styles.logo}></Image>
 
       <LinearGradient
       colors={['#740000', '#2F0202']}
