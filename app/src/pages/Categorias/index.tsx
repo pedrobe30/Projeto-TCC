@@ -15,7 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import apiCategorias from '../../../services/apiCategorias';
+import apiCategorias from '../../services/apiCategorias';
 
 
 interface Category {

@@ -7,9 +7,8 @@ import Home from './app/src/pages/Home/index';
 import Perfil from './app/src/pages/Perfil/Index';
 import VerificationPage from './app/src/pages/Autenticacao/codeverify';
 import ProductListScreen from './app/src/pages/Produtos';
-import Categoria from './app/src/pages/Home/Categorias';
 import FilteredProductListScreen  from './app/src/pages/Produtos/ProdutosFiltrados'
-import Categoria from './app/src/pages/Categorias';
+import Categorias from './app/src/pages/Categorias';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,7 +24,7 @@ export default function App() {
         <Stack.Screen name='Produtos' component={ProductListScreen} 
          options={{ headerShown: false }}
          />
-          <Stack.Screen name='Categoria' component={Categoria} options={{headerShown: false}}/> 
+          <Stack.Screen name='Categoria' component={Categorias} options={{headerShown: false}}/> 
           <Stack.Screen name="FilteredProductList" component={FilteredProductListScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>

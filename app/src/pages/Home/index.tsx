@@ -132,12 +132,12 @@ export default function Home() {
 
         <TouchableOpacity
           style={styles.footerButton}
-          onPress={() => navigation.navigate('Categoria')}
+          onPress={() => navigation.navigate('Categorias')}
         >
           <Ionicons
             name="grid-outline"
             size={28}
-            color={route.name === 'Categoria' ? '#FFD700' : '#fff'}
+            color={route.name === 'Categorias' ? '#FFD700' : '#fff'}
           />
         </TouchableOpacity>
 
