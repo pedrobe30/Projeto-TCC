@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import FooterNav from '../../services/FooterNav';
 
 export default function Home() {
   const [consulta, setConsulta] = useState('');
@@ -118,40 +119,8 @@ export default function Home() {
       </View>
 
       {/* Footer fixo */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Ionicons
-            name="home-outline"
-            size={28}
-            color={route.name === 'Home' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Categorias')}
-        >
-          <Ionicons
-            name="grid-outline"
-            size={28}
-            color={route.name === 'Categorias' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Perfil')}
-        >
-          <Ionicons
-            name="person-circle-outline"
-            size={28}
-            color={route.name === 'Perfil' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
-      </View>
+    <FooterNav />
+      
     </SafeAreaView>
   );
 }

@@ -1,10 +1,10 @@
 // Updated Categories Screen with proper navigation to filtered products
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
   Image,
   SafeAreaView,
   FlatList,
@@ -16,40 +16,40 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import apiCategorias from '../../services/apiCategorias';
-
-
+import FooterNav from '../../services/FooterNav'; // Import your FooterNav component
+ 
 interface Category {
   idCategoria: number;
   categoria: string;
 }
-
+ 
 export default function Categorias() {
   // State to store the categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
-  
+ 
   const navigation = useNavigation();
-
+ 
   // Fetch categories when component mounts
   useEffect(() => {
     console.log("Componente montado, buscando categorias...");
     fetchCategories();
   }, []);
-
+ 
   // Function to fetch categories from the API
   const fetchCategories = async () => {
     try {
       setLoading(true);
       console.log("Fazendo solicitação de API para buscar categorias...");
-      
+     
       // Try using your api instance first
       try {
         // Change endpoint from Categoria to endpoint that matches your Controller name
         const response = await apiCategorias.get('/Categorias');
         console.log("API Response:", JSON.stringify(response.data, null, 2));
-        
+       
         // Check if the response has the expected structure
         if (response.data && response.data.dados) {
           console.log("Definindo categorias a partir de response.data.dados");
@@ -58,57 +58,59 @@ export default function Categorias() {
           console.log("Definindo categorias diretamente da resposta.data");
           setCategories(response.data);
         }
-        
+       
         setError(null);
       } catch (apiError) {
         console.log("Error with api instance, trying direct axios call:", apiError);
-        
+       
         // Fallback to direct axios call with different URL format
         const directResponse = await axios.get('https://localhost:7024/api/Categorias');
         console.log("Direct axios response:", JSON.stringify(directResponse.data, null, 2));
-        
+       
         if (directResponse.data && directResponse.data.dados) {
           setCategories(directResponse.data.dados);
         } else {
           setCategories(directResponse.data);
         }
-        
+       
         setError(null);
       }
     } catch (err) {
       console.error("Error fetching categories:", err);
-      
+     
       // More detailed error logging
       if (axios.isAxiosError(err)) {
-        const errorMsg = err.response 
+        const errorMsg = err.response
           ? `Status: ${err.response.status}, Data: ${JSON.stringify(err.response.data)}`
           : `${err.message} - Check if API server is running`;
-        
+       
         console.log("Axios error details:", errorMsg);
         setErrorDetails(errorMsg);
       } else {
         console.log("Non-axios error:", err);
         setErrorDetails(err instanceof Error ? err.message : String(err));
       }
-      
+     
       setError('Failed to load categories. Check console for details.');
     } finally {
       setLoading(false);
     }
   };
-
+ 
   // Updated function to handle category selection and navigate to filtered products
   const handleCategoryPress = (category: Category) => {
     console.log(`Categoria selecionada:`, category);
-    
+   
     try {
       // Navigate to the filtered products screen, passing category data as parameters
       // Make sure 'FilteredProductList' matches the route name in your navigation stack
-      navigation.navigate('FilteredProductList', {categoryId: category.idCategoria, categoryName: category.categoria});
-
+      navigation.navigate('FilteredProductList', {
+        categoryId: category.idCategoria,
+        categoryName: category.categoria
+      });
     } catch (navigationError) {
       console.error('Erro ao navegar para produtos filtrados:', navigationError);
-      
+     
       // Fallback: show alert if navigation fails
       Alert.alert(
         "Navegação",
@@ -117,13 +119,13 @@ export default function Categorias() {
       );
     }
   };
-
+ 
   // Render each category item
   const renderCategoryItem = ({ item }: { item: Category }) => {
     console.log("Renderizando item da categoria:", item); // Debug log
-    
+   
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.categoryContainer}
         onPress={() => handleCategoryPress(item)} // Pass the entire category object
         activeOpacity={0.7}
@@ -138,7 +140,7 @@ export default function Categorias() {
           <Text style={styles.cardText}>
             {item.categoria || 'Nome não disponível'}
           </Text>
-          
+         
           {/* Optional: Add a small indicator showing this will navigate */}
           <Text style={styles.navigationHint}>
             Toque para ver produtos →
@@ -147,7 +149,7 @@ export default function Categorias() {
       </TouchableOpacity>
     );
   };
-
+ 
   return (
     <LinearGradient
       colors={['#EEEEEE', '#310505']}
@@ -156,42 +158,14 @@ export default function Categorias() {
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
-<<<<<<< HEAD:app/src/pages/Home/Categorias/index.tsx
       <SafeAreaView style={styles.safeArea}>
-        <Image 
-          source={require("../../../assets/Vestetec-removebg-preview.png")} 
+        <Image
+          source={require("../../assets/Vestetec-removebg-preview.png")}
           style={styles.logo}
         />
-=======
-    <SafeAreaView>
-
-    <Image source={require("../../assets/Vestetec-removebg-preview.png")} style={styles.logo}></Image>
-
-      <LinearGradient
-      colors={['#740000', '#2F0202']}
-      locations={[0.15, 0.91]} // 22% e 100%
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      >
-
-     <View style={styles.categoria}>
-
-        {categories.map(cat => (
-          <TouchableOpacity
-            key={cat.id}
-            style={styles.card}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.cardText}>{cat.title}</Text>
-          </TouchableOpacity>
-        ))}
-
-        </View>
-      </LinearGradient>
->>>>>>> 07f9e67d5999ecbce226320e46a157133e6e001c:app/src/pages/Categorias/index.tsx
-        
+       
         <Text style={styles.title}>Categorias</Text>
-        
+       
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#740000" />
@@ -224,13 +198,15 @@ export default function Categorias() {
             showsVerticalScrollIndicator={false}
           />
         )}
+        {/*FooterNav*/}
+      <FooterNav />
       </SafeAreaView>
     </LinearGradient>
   );
 }
-
+ 
 const windowWidth = Dimensions.get('window').width;
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
