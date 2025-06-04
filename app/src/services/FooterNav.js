@@ -16,8 +16,8 @@ export default function FooterNavigation() {
 
   // Definindo a cor do footer de acordo com a tela
   const footerBackgroundColor = route.name === 'Home' ? '#fff' : '#000';
-  const iconActiveColor = route.name === 'Home' ? '#000' : '#000'; // A cor do ícone ativo dentro do botão
-  const iconInactiveColor = route.name === 'Home' ? '#000' : '#FFD700'; // Cor do ícone inativo
+  const iconActiveColor = route.name === 'Home' ? '#000' : '#fff'; // A cor do ícone ativo dentro do botão
+  const iconInactiveColor = route.name === 'Home' ? '#FF0000' : '#FF0000'; // Cor do ícone inativo
 
   return (
     <View style={[styles.footer, { backgroundColor: footerBackgroundColor }]}>
@@ -53,11 +53,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 30,
-    width: '80%',
+    //borderRadius: 30,
+    width: '100%',
     alignSelf: 'center',
-    position: 'absolute',
-    bottom: 20,
+    //position: 'absolute',
+    //bottom: 20,
   },
   footerButton: {
     alignItems: 'center',
@@ -67,8 +67,8 @@ const styles = StyleSheet.create({
     height: 50,
   },
   activeButton: {
-    backgroundColor: '#FFD700',
-    width: 80,
+    backgroundColor: '#FF0000',
+    width: 100,
     borderRadius: 25,
     flexDirection: 'row',
     paddingHorizontal: 8,
