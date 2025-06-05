@@ -31,8 +31,12 @@ const ProductListScreen = () => {
       setLoading(true);
       
       const response = await produtoService.getAllProdutos();
+
+      console.log('Resposta completa da API:', JSON.stringify(response, null, 2));
       
       if (response.status) {
+        console.log('Primeiro produto:', JSON.stringify(response.dados[0], null, 2));
+      console.log('Chaves disponíveis:', Object.keys(response.dados[0]));
         // Ordenar produtos do mais recente para o mais antigo
         const sortedProducts = response.dados.sort((a, b) => b.idProd - a.idProd);
         setProducts(sortedProducts);

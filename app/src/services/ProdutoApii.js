@@ -60,62 +60,7 @@ class ProdutoService {
     }
   }
 
-  // // Add new product
-  // async addProduto(produto) {
-  //   try {
-  //     const response = await api.post('/Produtos', produto);
-  //     return {
-  //       status: true,
-  //       dados: response.data.dados || response.data,
-  //       mensagem: 'Produto adicionado com sucesso'
-  //     };
-  //   } catch (error) {
-  //     console.error('Erro ao adicionar produto:', error);
-  //     return {
-  //       status: false,
-  //       dados: null,
-  //       mensagem: error.response?.data?.mensagem || 'Erro ao adicionar produto'
-  //     };
-  //   }
-  // }
 
-  // // Update existing product
-  // async updateProduto(id, produto) {
-  //   try {
-  //     const response = await api.put(`/Produtos/${id}`, produto);
-  //     return {
-  //       status: true,
-  //       dados: response.data.dados || response.data,
-  //       mensagem: 'Produto atualizado com sucesso'
-  //     };
-  //   } catch (error) {
-  //     console.error('Erro ao atualizar produto:', error);
-  //     return {
-  //       status: false,
-  //       dados: null,
-  //       mensagem: error.response?.data?.mensagem || 'Erro ao atualizar produto'
-  //     };
-  //   }
-  // }
-
-  // // Delete product
-  // async deleteProduto(id) {
-  //   try {
-  //     const response = await api.delete(`/Produtos/${id}`);
-  //     return {
-  //       status: true,
-  //       dados: response.data.dados || true,
-  //       mensagem: 'Produto removido com sucesso'
-  //     };
-  //   } catch (error) {
-  //     console.error('Erro ao remover produto:', error);
-  //     return {
-  //       status: false,
-  //       dados: false,
-  //       mensagem: error.response?.data?.mensagem || 'Erro ao remover produto'
-  //     };
-  //   }
-  // }
 }
 
 // Export a singleton instance

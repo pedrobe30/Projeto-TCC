@@ -2,10 +2,12 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import {api_img} from '../../services/api'
 
 
 
 const ProductCard = ({ product, onPress }) => {
+  console.log('Dados do produto no card:', JSON.stringify(product, null, 2));
   return (
         <TouchableOpacity style={styles.card} onPress={() => onPress && onPress(product)}>
             <View style={styles.contImage}>
@@ -17,7 +19,7 @@ const ProductCard = ({ product, onPress }) => {
             end={{ x: 0, y: 1 }}
         />
         <Image
-            source={{ uri: product.imgUrl ||  ""}} 
+            source={{ uri: `${api_img}${product.imgUrl}`}} 
             style={styles.image} 
             resizeMode="cover"
         />

@@ -174,7 +174,7 @@ const FilteredProductListScreen = () => {
           <FlatList
             data={products}
             renderItem={renderItem}
-            keyExtractor={(item) => item.idProd.toString()}
+            keyExtractor={(item, index) => (item?.id ?? index).toString()}
             contentContainerStyle={styles.listContainer}
             ItemSeparatorComponent={renderSeparator}
             ListEmptyComponent={renderEmptyList}
