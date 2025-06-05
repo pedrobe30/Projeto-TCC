@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import FooterNav from '../../services/FooterNav'; // Import your FooterNav component
 
 export default function Perfil() {  
   const navigation = useNavigation();
@@ -33,43 +34,11 @@ export default function Perfil() {
       </View>
 
       {/* Footer Navigation com Perfil incluído */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Ionicons
-            name="home-outline"
-            size={28}
-            color={route.name === 'Home' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Categoria')}
-        >
-          <Ionicons
-            name="grid-outline"
-            size={28}
-            color={route.name === 'Categoria' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.footerButton}
-          onPress={() => navigation.navigate('Perfil')}
-        >
-          <Ionicons
-            name="person-circle-outline"
-            size={28}
-            color={route.name === 'Perfil' ? '#FFD700' : '#fff'}
-          />
-        </TouchableOpacity>
+      <FooterNav />
       </View>
-    </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
