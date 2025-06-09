@@ -1,4 +1,4 @@
-// ProductListScreen.js - Versão refatorada e melhorada
+// ProductListScreen.js - Versão corrigida com navegação
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -12,12 +12,14 @@ import {
   Modal,
   Image
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { produtoService } from '../../services/ProdutoApii';
 import ProductCard from './produtocard';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-
+import FooterNav from '../../services/FooterNav';
 
 const ProductListScreen = () => {
+  const navigation = useNavigation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +38,7 @@ const ProductListScreen = () => {
       
       if (response.status) {
         console.log('Primeiro produto:', JSON.stringify(response.dados[0], null, 2));
-      console.log('Chaves disponíveis:', Object.keys(response.dados[0]));
+        console.log('Chaves disponíveis:', Object.keys(response.dados[0]));
         // Ordenar produtos do mais recente para o mais antigo
         const sortedProducts = response.dados.sort((a, b) => b.idProd - a.idProd);
         setProducts(sortedProducts);
@@ -70,10 +72,11 @@ const ProductListScreen = () => {
     setShowAddForm(false);
   };
 
-  // Função para lidar com o clique em um produto
+  // Função para lidar com o clique em um produto - CORRIGIDA
   const handleProductPress = (product) => {
-    // Aqui você pode navegar para a tela de detalhes ou realizar outras ações
-    console.log('Produto selecionado:', product);
+    console.log('Navegando para produto:', product);
+    // Navegar para a tela de detalhes passando o produto como parâmetro
+    navigation.navigate('ProductDetail', { product });
   };
 
   // Renderizar produto individual
@@ -118,27 +121,22 @@ const ProductListScreen = () => {
       
       <View style={styles.container}>
         {/* Cabeçalho */}
-                <View>
-                  <Image 
-                    style={styles.logo} 
-                    source={require('../../assets/Vestetec-removebg-preview.png')} 
-                  /> 
-                </View>
-                <View style={styles.perfilIcon}>
-                    <Ionicons name="person-circle-outline" size={40} color="#000000" />
-                </View>
+        <View>
+          <Image 
+            style={styles.logo} 
+            source={require('../../assets/Vestetec-removebg-preview.png')} 
+          /> 
+        </View>
+        
 
-                <View style={styles.homeIcon}>
-                  <Ionicons name='home'size={40} color="000000" />
-                </View>
+        
 
-                   <View style={styles.categIcon}>
-                  <MaterialIcons name="category" size={40} />
-                </View>
+        
 
-                <View style={styles.carIcon}>
-                  <Ionicons name='cart-outline' size={40} color="000000" />
-                </View>
+        <View style={styles.carIcon}>
+          <Ionicons name='cart-outline' size={40} color="000000" />
+        </View>
+        
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nossos Produtos</Text> 
         </View>
@@ -165,9 +163,8 @@ const ProductListScreen = () => {
           />
         )}
       </View>
-      
-    
-     
+
+       <FooterNav />
     </SafeAreaView>
   );
 };
@@ -182,35 +179,29 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f5f5f5',
   },
-  logo:
-  {
+  logo: {
     height: 30,
     width: '40%'
   },
-  perfilIcon:
-  {
-
+  perfilIcon: {
     position: 'relative',
     left: '48%',
     bottom: '4%',
     color: '#000000'
   },
-  homeIcon:
-  {
+  homeIcon: {
     position: 'relative',
     left: '60%',
     bottom: '9.60%',
     color: '#000000'
   },
-  categIcon:
-  {
+  categIcon: {
     position: 'relative',
     left: '72%',
     bottom: '14.80%',
     color: '#000000'
   },
-  carIcon:
-  {
+  carIcon: {
     position: 'relative',
     left: '84%',
     bottom: '19.70%',
@@ -220,7 +211,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
- 
     position: 'relative',
     bottom: 87
   },
@@ -230,14 +220,10 @@ const styles = StyleSheet.create({
     color: '#333',
     position: 'relative',
     bottom: 0,
-   
   },
-
- 
   listContainer: {
     flexGrow: 1,
     paddingBottom: 16,
-    
   },
   separator: {
     height: 16,
@@ -246,7 +232,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    
   },
   loadingText: {
     marginTop: 16,
@@ -299,7 +284,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
- 
 });
 
 export default ProductListScreen;

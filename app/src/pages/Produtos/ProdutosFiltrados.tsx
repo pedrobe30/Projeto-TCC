@@ -69,11 +69,11 @@ const FilteredProductListScreen = () => {
     fetchProductsByCategory();
   };
 
-  // Function to handle product press
+  // Function to handle product press - CORRIGIDA
   const handleProductPress = (product) => {
-    // Navigate to product details or perform other actions
-    console.log('Produto selecionado:', product);
-    // Example: navigation.navigate('ProductDetails', { product });
+    console.log('Navegando para produto:', product);
+    // Navigate to product details passing the product as parameter
+    navigation.navigate('ProductDetail', { product });
   };
 
   // Function to go back to categories screen
@@ -137,15 +137,6 @@ const FilteredProductListScreen = () => {
           
           {/* Navigation icons */}
           <View style={styles.navigationIcons}>
-            <View style={styles.perfilIcon}>
-              <Ionicons name="person-circle-outline" size={32} color="#000000" />
-            </View>
-            <View style={styles.homeIcon}>
-              <Ionicons name='home' size={32} color="#000000" />
-            </View>
-            <View style={styles.categIcon}>
-              <MaterialIcons name="category" size={32} color="#000000" />
-            </View>
             <View style={styles.carIcon}>
               <Ionicons name='cart-outline' size={32} color="#000000" />
             </View>
@@ -174,7 +165,7 @@ const FilteredProductListScreen = () => {
           <FlatList
             data={products}
             renderItem={renderItem}
-            keyExtractor={(item, index) => (item?.id ?? index).toString()}
+            keyExtractor={(item, index) => (item?.idProd ?? index).toString()}
             contentContainerStyle={styles.listContainer}
             ItemSeparatorComponent={renderSeparator}
             ListEmptyComponent={renderEmptyList}

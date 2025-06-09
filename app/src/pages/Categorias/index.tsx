@@ -64,7 +64,7 @@ export default function Categorias() {
         console.log("Error with api instance, trying direct axios call:", apiError);
        
         // Fallback to direct axios call with different URL format
-        const directResponse = await axios.get('https://localhost:7024/api/Categorias');
+        const directResponse = await axios.get('http://localhost:5260/api/Categorias');
         console.log("Direct axios response:", JSON.stringify(directResponse.data, null, 2));
        
         if (directResponse.data && directResponse.data.dados) {
