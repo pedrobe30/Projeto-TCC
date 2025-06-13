@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -8,19 +8,52 @@ import {
   Animated,
   SafeAreaView,
   ScrollView,
-  Image
+  Image,
+  Dimensions,
+  FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import FooterNav from '../../services/FooterNav';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 export default function Home() {
   const [consulta, setConsulta] = useState('');
   const [isFoco, setIsFoco] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const animacao = new Animated.Value(0);
+  const carouselRef = useRef(null);
+  const intervalRef = useRef(null);
 
   const navigation = useNavigation();
   const route = useRoute();
+
+  // Dados do carrossel
+  const banners = [
+    { id: 1, image: require('../../assets/Banner1.png') },
+    { id: 2, image: require('../../assets/Banner2.png') }
+  ];
+
+  // Auto-scroll do carrossel
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex(prevIndex => {
+        const nextIndex = (prevIndex + 1) % banners.length;
+        carouselRef.current?.scrollToIndex({ 
+          index: nextIndex, 
+          animated: true 
+        });
+        return nextIndex;
+      });
+    }, 4000); // Muda a cada 4 segundos
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   const onPesquisa = (texto) => {
     console.log("Pesquisando por:", texto);
@@ -66,17 +99,36 @@ export default function Home() {
     outputRange: [0.1, 0.3],
   });
 
+  const renderBanner = ({ item }) => (
+    <View style={styles.bannerContainer}>
+      <Image source={item.image} style={styles.bannerImage} />
+    </View>
+  );
+
+  const onScroll = (event) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / screenWidth);
+    setCurrentIndex(index);
+  };
+
+  const goToSlide = (index) => {
+    carouselRef.current?.scrollToIndex({ index, animated: true });
+    setCurrentIndex(index);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ flex: 1, paddingBottom: 80 }}> {/* Adiciona espaço pro footer */}
-        <ScrollView>
+      <View style={{ flex: 1, paddingBottom: 80 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}></View>
 
+          {/* Logo */}
           <Image 
             style={styles.logo} 
             source={require('../../assets/Vestetec-removebg-preview.png')} 
           /> 
 
+          {/* Barra de Pesquisa */}
           <Animated.View 
             style={[
               styles.barra, 
@@ -115,16 +167,70 @@ export default function Home() {
               </TouchableOpacity>
             )}
           </Animated.View>
+
+          {/* Carrossel de Banners */}
+          <View style={styles.carouselSection}>
+            <FlatList
+              ref={carouselRef}
+              data={banners}
+              renderItem={renderBanner}
+              keyExtractor={(item) => item.id.toString()}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+              onScrollBeginDrag={() => {
+                // Para o auto-scroll quando o usuário interage
+                if (intervalRef.current) {
+                  clearInterval(intervalRef.current);
+                }
+              }}
+              onScrollEndDrag={() => {
+                // Reinicia o auto-scroll após a interação
+                intervalRef.current = setInterval(() => {
+                  setCurrentIndex(prevIndex => {
+                    const nextIndex = (prevIndex + 1) % banners.length;
+                    carouselRef.current?.scrollToIndex({ 
+                      index: nextIndex, 
+                      animated: true 
+                    });
+                    return nextIndex;
+                  });
+                }, 4000);
+              }}
+            />
+            
+            {/* Indicadores de página */}
+            <View style={styles.pageIndicators}>
+              {banners.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    {
+                      backgroundColor: currentIndex === index ? '#3498db' : '#d0d0d0',
+                      transform: [{ scale: currentIndex === index ? 1.2 : 1 }]
+                    }
+                  ]}
+                  onPress={() => goToSlide(index)}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Espaço adicional para mais conteúdo futuro */}
+          <View style={styles.contentSection}>
+            {/* Aqui você pode adicionar mais seções como categorias, produtos em destaque, etc. */}
+          </View>
         </ScrollView>
       </View>
 
       {/* Footer fixo */}
-    <FooterNav />
-      
+      <FooterNav />
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -177,6 +283,36 @@ const styles = StyleSheet.create({
     padding: 7,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Estilos do Carrossel
+  carouselSection: {
+    marginVertical: 20,
+  },
+  bannerContainer: {
+    width: screenWidth,
+    paddingHorizontal: 15,
+  },
+  bannerImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    resizeMode: 'cover',
+  },
+  pageIndicators: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  contentSection: {
+    paddingHorizontal: 15,
+    paddingBottom: 20,
   },
   footer: {
     flexDirection: 'row',

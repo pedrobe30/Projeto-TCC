@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { login } from '../../services/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Schema de validação do formulário
 const schema = yup.object({
@@ -43,11 +44,16 @@ export default function Login() {
       console.log('Resultado login:', resultado); // Debug log
 
       if (resultado && resultado.status) {
-        // Armazenar o token ou fazer outras operações necessárias
-        // Por exemplo, armazenar em AsyncStorage ou similar
-        
-        // Navegar para a página principal ou home
-        navigation.navigate('Home'); // Substitua 'Home' pelo nome da sua rota principal
+        const token = resultado.Dados
+        try {
+          await AsyncStorage.setItem('token', token)
+        } catch (e) {
+          console.error('Erro salvando token', e)
+        }
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home'}]
+        })
       } else {
         Alert.alert('Erro', resultado?.Mensagem || 'Credenciais inválidas. Verifique seu email e senha.');
       }

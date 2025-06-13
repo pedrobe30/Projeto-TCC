@@ -14,6 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { api_img } from '../../services/api';
+// Importar o serviço de carrinho
+import { carrinhoService } from '../../services/CarrinhoService'; // Ajuste o caminho conforme necessário
 
 // Definir tipos para melhor TypeScript
 interface Product {
@@ -47,6 +49,7 @@ const ProductDetailScreen = () => {
   // Estados para controle da interface
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   
   // Tamanhos disponíveis (você pode adaptar conforme sua necessidade)
   const availableSizes = ['P', 'M', 'G', 'GG'];
@@ -66,8 +69,8 @@ const ProductDetailScreen = () => {
     }
   };
   
-  // Função para adicionar ao carrinho
-  const handleAddToCart = () => {
+  // Função para adicionar ao carrinho - CORRIGIDA
+  const handleAddToCart = async () => {
     if (!product) return;
     
     if (!selectedSize) {
@@ -80,29 +83,61 @@ const ProductDetailScreen = () => {
       return;
     }
     
-    // Aqui você implementaria a lógica para adicionar ao carrinho
-    Alert.alert(
-      'Sucesso!',
-      `Produto adicionado ao carrinho!\nTamanho: ${selectedSize}\nQuantidade: ${quantity}`,
-      [
-        {
-          text: 'Continuar Comprando',
-          style: 'cancel'
-        },
-        {
-          text: 'Ver Carrinho',
-          onPress: () => {
-            // Navegar para o carrinho
-            console.log('Navegar para carrinho');
+    try {
+      setIsAddingToCart(true);
+      
+      // Preparar produto para o carrinho
+      const produtoParaCarrinho = {
+        idProd: product.idProd,
+        categoriaNome: product.categoriaNome,
+        modeloNome: product.modeloNome,
+        tecidoNome: product.tecidoNome,
+        preco: product.preco,
+        imgUrl: product.imgUrl,
+      };
+      
+      // Adicionar ao carrinho usando o serviço com tamanho
+      carrinhoService.adicionarItem(produtoParaCarrinho, quantity, selectedSize);
+      
+      // Mostrar sucesso
+      Alert.alert(
+        'Sucesso!',
+        `Produto adicionado ao carrinho!\nTamanho: ${selectedSize}\nQuantidade: ${quantity}`,
+        [
+          {
+            text: 'Continuar Comprando',
+            style: 'cancel'
+          },
+          {
+            text: 'Ver Carrinho',
+            onPress: () => {
+              // Navegar para o carrinho - ajuste o nome da rota conforme necessário
+              navigation.navigate('Carrinho' as never);
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+      
+      // Resetar seleções após adicionar
+      setSelectedSize('');
+      setQuantity(1);
+      
+    } catch (error) {
+      console.error('Erro ao adicionar produto ao carrinho:', error);
+      Alert.alert('Erro', 'Não foi possível adicionar o produto ao carrinho. Tente novamente.');
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
   
   // Função para voltar
   const handleGoBack = () => {
     navigation.goBack();
+  };
+  
+  // Função para ir ao carrinho
+  const goToCart = () => {
+    navigation.navigate('Carrinho' as never);
   };
   
   // Se não há produto, exibir mensagem de erro
@@ -132,17 +167,29 @@ const ProductDetailScreen = () => {
         style={styles.gradient}
       />
       
-      {/* Header com botão de voltar */}
+      {/* Header com botão de voltar e carrinho */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backIconButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         
-      
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={goToCart} style={styles.headerIcon}>
+            <View style={styles.cartIconContainer}>
+              <Ionicons name="cart-outline" size={24} color="#333" />
+              {carrinhoService.obterQuantidadeTotal() > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>
+                    {carrinhoService.obterQuantidadeTotal()}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
       
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-    
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: `${api_img}${product.imgUrl}` }}
@@ -242,14 +289,19 @@ const ProductDetailScreen = () => {
         <TouchableOpacity 
           style={[
             styles.addToCartButton,
-            (!selectedSize || product.quantEstoque === 0) && styles.addToCartButtonDisabled
+            ((!selectedSize || product.quantEstoque === 0) || isAddingToCart) && styles.addToCartButtonDisabled
           ]}
           onPress={handleAddToCart}
-          disabled={!selectedSize || product.quantEstoque === 0}
+          disabled={!selectedSize || product.quantEstoque === 0 || isAddingToCart}
         >
           <Ionicons name="cart" size={20} color="#fff" />
           <Text style={styles.addToCartButtonText}>
-            {product.quantEstoque === 0 ? 'Indisponível' : 'Adicionar ao Carrinho'}
+            {isAddingToCart 
+              ? 'Adicionando...' 
+              : product.quantEstoque === 0 
+                ? 'Indisponível' 
+                : 'Adicionar ao Carrinho'
+            }
           </Text>
         </TouchableOpacity>
       </View>
@@ -290,6 +342,25 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  },
+  cartIconContainer: {
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#A30101',
+    borderRadius: 12,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   scrollContainer: {
     flex: 1,

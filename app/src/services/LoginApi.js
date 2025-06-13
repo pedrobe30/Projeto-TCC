@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const loginApi = axios.create({
-    baseURL: 'http://10.0.0.168:5260/api/Login',
+    baseURL: 'https://localhost:7024/api/Login',
     headers: { 'Content-Type': 'application/json'}
 });
 

@@ -14,7 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 // Função para buscar escolas da API - CORRIGIDA
 const fetchEscolas = async () => {
   try {
-    const response = await fetch('http://10.0.0.168:5260/api/Escola');
+    const response = await fetch('https://localhost:7024/api/Escola');
     if (!response.ok) {
       throw new Error('Erro ao buscar escolas');
     }
@@ -142,24 +142,20 @@ export default function Cad() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.container}>
-          {/* Boas vindas */}
-          <View style={styles.bemvindo}>
-            <Image source={require('../../assets/bv.png')} style={styles.bv} />
-          </View>
+        
+   
           
           {/* Logo */}
-          <View style={styles.logo}>
+          {/* <View style={styles.logo}>
             <Image
               source={require('../../assets/Vestetec-removebg-preview.png')}
               style={styles.image}
             />
-          </View>
+          </View> */}
           
           {/* Container do formulário */}
           <View style={styles.minicontainer}>
-            <Text style={styles.texto}>
-              <Foundation style={styles.alert} name="alert" size={24} color="black" /> APENAS E-MAIL INSTITUCIONAL
-            </Text>
+         
 
             {/* Campo Nome */}
             <Controller
@@ -334,24 +330,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bemvindo: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bv: {
-    height: 100,
-    width: 320,
-    zIndex: 4,
-    top: -30
-  },
+
+
   minicontainer: {
     backgroundColor: 'white',
     width: 360,
-    height: 'auto',
+    height: "auto",
     paddingVertical: 20,
     zIndex: 1
   },
   image: {
+   
     width: 360,
     zIndex: 2,
     left: 7
@@ -360,11 +349,7 @@ const styles = StyleSheet.create({
     height: 61,
     zIndex: 3
   },
-  texto: {
-    marginTop: 20,
-    margin: 49,
-    fontWeight: 'bold'
-  },
+
   alert: {
     alignItems: 'center',
   },

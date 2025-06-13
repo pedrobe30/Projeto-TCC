@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { verificarCodigo, reenviarCodigo } from '../../services/authService';
 
+
+
 // VerificationScreen component receives email and navigation from previous screen
 const VerificationPage = ({ route, navigation }) => {
   // Extract email from route params
