@@ -9,6 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { login } from '../../services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+
 // Schema de validação do formulário
 const schema = yup.object({
   email: yup.string().email('Email inválido').required('Informe seu email'),
@@ -69,10 +71,7 @@ export default function Login() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.container}>
-          {/* Boas vindas */}
-          <View style={styles.bemvindo}>
-            <Image source={require('../../assets/bv.png')} style={styles.bv} />
-          </View>
+      
           
           {/* Logo */}
           <View style={styles.logo}>

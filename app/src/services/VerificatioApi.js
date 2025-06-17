@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const verificationApi = axios.create({
-    baseURL: 'https://localhost:7024/api/Verificacao',
+    baseURL: 'http://10.0.0.168:5260/api/Verificacao',
     headers: { 'Content-Type': 'application/json'}
 });
 

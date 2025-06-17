@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
+
 
 export const apiClient = async (endpoint, options = {}) => {
   const token = await AsyncStorage.getItem('token');

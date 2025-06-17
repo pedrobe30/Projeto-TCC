@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     width: '100%',
-    height: 180,
+    height: 290,
     borderRadius: 12,
     resizeMode: 'cover',
   },
