@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, View, SafeAreaView, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { login } from '../../services/authService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
+import StorageService from '../../services/StorageService';
+import { isTokenValid } from '../../services/LoginService';
 
 // Schema de validação do formulário
 const schema = yup.object({
@@ -21,6 +20,7 @@ export default function Login() {
   const navigation = useNavigation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Configuração do React Hook Form com validação Yup
   const { control, handleSubmit, formState: { errors } } = useForm({
@@ -31,11 +31,37 @@ export default function Login() {
     }
   });
 
+  // Verifica se o usuário já está logado quando a tela é focada
+  useFocusEffect(
+    React.useCallback(() => {
+      checkExistingAuth();
+    }, [])
+  );
+
+  const checkExistingAuth = async () => {
+    try {
+      setIsCheckingAuth(true);
+      const tokenValid = await isTokenValid();
+      
+      if (tokenValid) {
+        // Se tem token válido, navega para Home
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }]
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
   // Função para lidar com o envio do formulário
   const onSubmit = async (data) => {
     try {
       setIsLoading(true);
-      console.log('Dados do formulário:', data); // Debug log
+      console.log('Dados do formulário:', data);
       
       // Chama o endpoint de login
       const resultado = await login({
@@ -43,35 +69,55 @@ export default function Login() {
         senha: data.senha
       });
 
-      console.log('Resultado login:', resultado); // Debug log
+      console.log('Resultado login:', resultado);
 
-      if (resultado && resultado.status) {
-        const token = resultado.Dados
+      if (resultado && resultado.status && resultado.dados) {
+        const token = resultado.dados;
+        
         try {
-          await AsyncStorage.setItem('token', token)
-        } catch (e) {
-          console.error('Erro salvando token', e)
+          // Salva o token usando o StorageService
+          await StorageService.saveToken(token);
+          console.log('Token salvo com sucesso');
+          
+          // Navega para Home
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }]
+          });
+        } catch (error) {
+          console.error('Erro ao salvar token:', error);
+          Alert.alert('Erro', 'Erro ao salvar dados de login. Tente novamente.');
         }
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home'}]
-        })
       } else {
-        Alert.alert('Erro', resultado?.Mensagem || 'Credenciais inválidas. Verifique seu email e senha.');
+        Alert.alert(
+          'Erro', 
+          resultado?.mensagem || 'Credenciais inválidas. Verifique seu email e senha.'
+        );
       }
     } catch (error) {
       console.error('Erro no login:', error);
-      Alert.alert('Erro', error.message || 'Ocorreu um erro ao fazer login.');
+      Alert.alert(
+        'Erro', 
+        error.message || 'Ocorreu um erro ao fazer login. Verifique sua conexão.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Mostra loading enquanto verifica autenticação
+  if (isCheckingAuth) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
+        <Text style={{ color: 'white', fontSize: 18 }}>Verificando autenticação...</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.container}>
-      
           
           {/* Logo */}
           <View style={styles.logo}>
@@ -100,6 +146,7 @@ export default function Login() {
                   keyboardType="email-address"
                   onBlur={onBlur}
                   autoCapitalize="none"
+                  editable={!isLoading}
                 />
               )}
             />
@@ -119,15 +166,17 @@ export default function Login() {
                     secureTextEntry={!showPassword}
                     onBlur={onBlur}
                     autoCapitalize="none"
+                    editable={!isLoading}
                   />
                   <TouchableOpacity
                     style={styles.icon}
                     onPress={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     <Ionicons 
                       name={showPassword ? 'eye' : 'eye-off'} 
                       size={34} 
-                      color="black" 
+                      color={isLoading ? "gray" : "black"} 
                     />
                   </TouchableOpacity>
                 </View>
@@ -137,15 +186,17 @@ export default function Login() {
 
             {/* Esqueci minha senha */}
             <TouchableOpacity
-              // style={styles.forgotPassword}
-            //  onPress={() => navigation.navigate('RecuperarSenha')}
+              // onPress={() => navigation.navigate('RecuperarSenha')}
+              disabled={isLoading}
             >
-              <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
+              <Text style={[styles.forgotPasswordText, { opacity: isLoading ? 0.5 : 1 }]}>
+                Esqueci minha senha
+              </Text>
             </TouchableOpacity>
 
             {/* Botão de Login */}
             <TouchableOpacity 
-              style={styles.btn}
+              style={[styles.btn, { opacity: isLoading ? 0.7 : 1 }]}
               onPress={handleSubmit(onSubmit)}
               disabled={isLoading}
             >
@@ -164,8 +215,9 @@ export default function Login() {
           <View style={styles.conta}>
             <Text style={styles.txtConta}>Ainda não tem uma conta?</Text>
             <TouchableOpacity 
-              style={styles.btnlogin} 
+              style={[styles.btnlogin, { opacity: isLoading ? 0.5 : 1 }]} 
               onPress={() => navigation.navigate('Autenticacao')}
+              disabled={isLoading}
             >
               <Text style={styles.txtlogin}>Cadastre-se</Text>
             </TouchableOpacity>
@@ -176,6 +228,7 @@ export default function Login() {
   );
 }
 
+// Seus estilos permanecem os mesmos
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,

@@ -14,7 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 // Função para buscar escolas da API - CORRIGIDA
 const fetchEscolas = async () => {
   try {
-    const response = await fetch('http://10.0.0.168:5260/api/Escola');
+    const response = await fetch('http://172.18.101.2:7024/api/Escola');
     if (!response.ok) {
       throw new Error('Erro ao buscar escolas');
     }

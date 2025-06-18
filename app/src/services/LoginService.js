@@ -1,19 +1,72 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwtDecode from 'jwt-decode';
-
+import { jwtDecode } from 'jwt-decode';
+import StorageService from './StorageService';
 
 export const apiClient = async (endpoint, options = {}) => {
-  const token = await AsyncStorage.getItem('token');
+  const token = await StorageService.getToken();
+  
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
- 
-  // Se retornar 401, você pode forçar logout:
-  if (response.status === 401) {
-    await AsyncStorage.removeItem('token');
-    // navegar para login, se disponível o navigation aqui ou emitir evento global
+
+  try {
+    const response = await fetch(endpoint, {
+      ...options,
+      headers,
+    });
+
+    // Se retornar 401, remove o token e força logout
+    if (response.status === 401) {
+      await StorageService.removeToken();
+      // Você pode emitir um evento global ou navegar para login aqui
+      // Se tiver navigation disponível, pode fazer o logout
+      throw new Error('Token expirado. Faça login novamente.');
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Erro na requisição:', error);
+    throw error;
   }
-  return response.json();
+};
+
+// Função para verificar se o token ainda é válido
+export const isTokenValid = async () => {
+  try {
+    const token = await StorageService.getToken();
+    
+    if (!token) return false;
+
+    // Decodifica o token para verificar expiração
+    const decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+
+    // Verifica se o token expirou
+    if (decoded.exp < currentTime) {
+      await StorageService.removeToken();
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao validar token:', error);
+    await StorageService.removeToken();
+    return false;
+  }
+};
+
+// Função para fazer logout
+export const logout = async () => {
+  try {
+    await StorageService.removeToken();
+    // Aqui você pode adicionar outras limpezas necessárias
+    console.log('Logout realizado com sucesso');
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+  }
 };

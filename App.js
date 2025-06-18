@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwtDecode from 'jwt-decode';
+import StorageService from './app/src/services/StorageService';
+import { isTokenValid } from './app/src/services/LoginService';
 
 import Autenticacao from './app/src/pages/Autenticacao';
 import Login from './app/src/pages/Login/index';
@@ -27,24 +27,17 @@ export default function App() {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-          // decodificar o token para checar expiração
-          const { exp } = jwtDecode(token);
-          const now = Math.floor(Date.now() / 1000);
-          if (exp && exp > now) {
-            // token ainda válido
-            setUserToken(token);
-          } else {
-            // token expirado: remover e tratar como não autenticado
-            await AsyncStorage.removeItem('token');
-            setUserToken(null);
-          }
+        // Usa o mesmo método de verificação do LoginService
+        const tokenValid = await isTokenValid();
+        
+        if (tokenValid) {
+          const token = await StorageService.getToken();
+          setUserToken(token);
         } else {
           setUserToken(null);
         }
-      } catch (err) {
-        console.error('Erro ao verificar token:', err);
+      } catch (error) {
+        console.error('Erro ao verificar token:', error);
         setUserToken(null);
       } finally {
         setIsLoading(false);
@@ -55,10 +48,9 @@ export default function App() {
   }, []);
 
   if (isLoading) {
-    // Enquanto verifica, mostrar indicador simples; pode estilizar conforme desejar
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#740000" />
       </View>
     );
   }
