@@ -1,37 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, SafeAreaView, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
+import {
+  Text,
+  View,
+  SafeAreaView,
+  StyleSheet,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+} from "react-native";
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Foundation, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { criarAluno } from '../../services/alunoService';
 import { enviarCodigo } from '../../services/authService';
 import { Picker } from '@react-native-picker/picker';
 
-
-// Função para buscar escolas da API - CORRIGIDA
+// Função para buscar escolas da API
 const fetchEscolas = async () => {
   try {
-    const response = await fetch('http://172.18.101.2:7024/api/Escola');
+    const response = await fetch('http://10.0.0.168:5260/api/Escola');
     if (!response.ok) {
       throw new Error('Erro ao buscar escolas');
     }
     const data = await response.json();
-    
-    // Corrija o problema de nomenclatura de propriedades e padronize os dados
     const formattedData = data.map(escola => {
-      // Verifique quais propriedades existem e use a correta
       const escolaId = escola.idEsc || escola.IdEsc || escola.id_escola;
-      
       return {
-        IdEsc: escolaId ? escolaId.toString() : '', // Garante que seja string
+        IdEsc: escolaId ? escolaId.toString() : '',
         nome_esc: escola.nome_esc || escola.NomeEsc || ''
       };
     });
-    
-    console.log('Escolas formatadas:', formattedData); 
+    console.log('Escolas formatadas:', formattedData);
     return formattedData;
   } catch (error) {
     console.error('Erro ao buscar escolas:', error);
@@ -50,8 +58,7 @@ const schema = yup.object({
   rm: yup.string()
     .required('Informe seu RM')
     .matches(/^\d+$/, 'RM aceita apenas números')
-    .max(5, "Deve conter 5 números")
-    .min(5, "Deve conter 5 números"),
+    .length(5, "Deve conter 5 números"),
   escola: yup.string().required('Selecione uma escola')
 });
 
@@ -60,8 +67,12 @@ export default function Cad() {
   const [showPassword, setShowPassword] = useState(false);
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Carrega as escolas ao iniciar o componente
+
+  // Para dimensionar a imagem proporcionalmente
+  const windowWidth = Dimensions.get('window').width;
+  // Define largura da imagem como 70% da largura da tela, mas no máximo 300
+  const imageWidth = Math.min(windowWidth * 0.7, 300);
+
   useEffect(() => {
     const loadEscolas = async () => {
       try {
@@ -74,11 +85,9 @@ export default function Cad() {
         setLoading(false);
       }
     };
-    
     loadEscolas();
   }, []);
-  
-  // Configuração do React Hook Form com validação Yup
+
   const { control, handleSubmit, formState: { errors }, setValue, getValues } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -90,45 +99,28 @@ export default function Cad() {
     }
   });
 
-  // Função para lidar com o envio do formulário - CORRIGIDA
   const onSubmit = async (data) => {
     try {
-      console.log('Dados do formulário:', data); // Debug log
-      
-      // Verificação adicional para garantir que temos um ID de escola válido
+      console.log('Dados do formulário:', data);
       if (!data.escola || data.escola === "NaN" || data.escola === "undefined") {
         Alert.alert('Erro', 'Por favor, selecione uma escola válida.');
         return;
       }
-      
-      // Cria o aluno com os dados do formulário
       console.log('Chamando criarAluno…');
       const resultado = await criarAluno({
         NomeAlu: data.Nome,
         Rm: data.rm,
         EmailAlu: data.email,
         SenhaAlu: data.senha,
-        IdEsc: data.escola // Já deve ser uma string válida
+        IdEsc: data.escola
       });
-
-      console.log('Resultado criação aluno:', resultado); // Debug log
-
+      console.log('Resultado criação aluno:', resultado);
       if (!resultado.status) {
         Alert.alert('Erro', resultado.Mensagem || 'Erro ao cadastrar aluno.');
         return;
       }
-
-      // Envia o código de verificação para o email
-      // console.log('Chamando enviarCodigo…');
-      // const resultadoEnvio = await enviarCodigo(data.email);
-      // console.log('Resposta enviarCodigo:', resultadoEnvio);
-
       if (resultado.status) {
-        
-        
-        navigation.navigate('VerificationPage', { email: data.email});
-        
-       
+        navigation.navigate('VerificationPage', { email: data.email });
       } else {
         Alert.alert('Aviso', resultado.Mensagem || 'Erro ao enviar código de verificação.');
       }
@@ -139,24 +131,26 @@ export default function Cad() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.container}>
-        
-   
-          
-          {/* Logo */}
-          {/* <View style={styles.logo}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.select({ ios: 0, android: 20 })}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Logo / Imagem */}
+          <View style={styles.logo}>
             <Image
               source={require('../../assets/Vestetec-removebg-preview.png')}
-              style={styles.image}
+              style={{ width: imageWidth, height: imageWidth * 0.3, resizeMode: 'contain' }}
             />
-          </View> */}
-          
+          </View>
+
           {/* Container do formulário */}
           <View style={styles.minicontainer}>
-         
-
             {/* Campo Nome */}
             <Controller
               control={control}
@@ -166,12 +160,12 @@ export default function Cad() {
                   style={styles.input}
                   onChangeText={onChange}
                   value={value}
-                  placeholder="     Nome"
+                  placeholder="Nome"
                   onBlur={onBlur}
                 />
               )}
             />
-            {errors.Nome && <Text style={styles.error}>{errors.Nome?.message}</Text>}
+            {errors.Nome && <Text style={styles.error}>{errors.Nome.message}</Text>}
 
             {/* Campo RM */}
             <Controller
@@ -182,13 +176,13 @@ export default function Cad() {
                   style={styles.input}
                   onChangeText={onChange}
                   value={value}
-                  placeholder="     RM"
+                  placeholder="RM"
                   keyboardType="numeric"
                   onBlur={onBlur}
                 />
               )}
             />
-            {errors.rm && <Text style={styles.error}>{errors.rm?.message}</Text>}
+            {errors.rm && <Text style={styles.error}>{errors.rm.message}</Text>}
 
             {/* Campo Email */}
             <Controller
@@ -199,13 +193,14 @@ export default function Cad() {
                   style={styles.input}
                   onChangeText={onChange}
                   value={value}
-                  placeholder="     Email"
+                  placeholder="Email"
                   keyboardType="email-address"
                   onBlur={onBlur}
+                  autoCapitalize="none"
                 />
               )}
             />
-            {errors.email && <Text style={styles.error}>{errors.email?.message}</Text>}
+            {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
             {/* Campo Senha */}
             <Controller
@@ -217,26 +212,27 @@ export default function Cad() {
                     style={styles.input}
                     onChangeText={onChange}
                     value={value}
-                    placeholder="     Crie sua Senha"
+                    placeholder="Crie sua Senha"
                     secureTextEntry={!showPassword}
                     onBlur={onBlur}
+                    autoCapitalize="none"
                   />
                   <TouchableOpacity
                     style={styles.icon}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Ionicons 
-                      name={showPassword ? 'eye' : 'eye-off'} 
-                      size={34} 
-                      color="black" 
+                    <Ionicons
+                      name={showPassword ? 'eye' : 'eye-off'}
+                      size={24}
+                      color="gray"
                     />
                   </TouchableOpacity>
                 </View>
               )}
             />
-            {errors.senha && <Text style={styles.error}>{errors.senha?.message}</Text>}
+            {errors.senha && <Text style={styles.error}>{errors.senha.message}</Text>}
 
-            {/* Campo Escola (Dropdown) - CORRIGIDO */}
+            {/* Campo Escola (Dropdown) */}
             {loading ? (
               <View style={styles.loaderContainer}>
                 <ActivityIndicator size="large" color="#740000" />
@@ -244,7 +240,7 @@ export default function Cad() {
               </View>
             ) : (
               <>
-                <Controller 
+                <Controller
                   control={control}
                   name="escola"
                   render={({ field: { onChange, value } }) => (
@@ -252,26 +248,23 @@ export default function Cad() {
                       <Picker
                         selectedValue={value}
                         onValueChange={(itemValue) => {
-                          console.log('Escola selecionada:', itemValue); // Debug log
-                          
-                          // Garante que não estamos trabalhando com NaN
+                          console.log('Escola selecionada:', itemValue);
                           if (itemValue && itemValue !== "NaN") {
                             onChange(itemValue);
-                            // Forçamos atualização usando setValue para garantir
                             setValue('escola', itemValue, { shouldValidate: true });
                           }
                         }}
                         style={styles.picker}
                         dropdownIconColor="#390000"
                       >
-                        <Picker.Item 
-                          label="Selecione uma escola" 
-                          value="" 
-                          style={styles.pickerPlaceholder} 
+                        <Picker.Item
+                          label="Selecione uma escola"
+                          value=""
+                          style={styles.pickerPlaceholder}
                         />
                         {escolas.map((escola, index) => (
                           <Picker.Item
-                            key={index} // Usa index se IdEsc não estiver definido
+                            key={index}
                             label={escola.nome_esc}
                             value={escola.IdEsc}
                             style={styles.pickerItem}
@@ -281,17 +274,15 @@ export default function Cad() {
                     </View>
                   )}
                 />
-                
-                {/* DEBUG: Info sobre escola selecionada - remover após resolver o problema */}
                 <Text style={styles.debugInfo}>
-                  Escola selecionada: {getValues().escola || 'nenhuma'}  
+                  Escola selecionada: {getValues().escola || 'nenhuma'}
                 </Text>
               </>
             )}
-            {errors.escola && <Text style={styles.error}>{errors.escola?.message}</Text>}
+            {errors.escola && <Text style={styles.error}>{errors.escola.message}</Text>}
 
             {/* Botão de Enviar */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.btn}
               onPress={handleSubmit(onSubmit)}
               disabled={loading}
@@ -308,75 +299,64 @@ export default function Cad() {
           {/* Link para Login */}
           <View style={styles.conta}>
             <Text style={styles.txtConta}>Já possui uma conta?</Text>
-            <TouchableOpacity 
-              style={styles.btnlogin} 
+            <TouchableOpacity
+              style={styles.btnlogin}
               onPress={() => navigation.navigate('Login')}
             >
               <Text style={styles.txtlogin}>Login</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    width: '100%',
-    height: '100%',
     backgroundColor: '#340000',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-
-
-  minicontainer: {
-    backgroundColor: 'white',
-    width: 360,
-    height: "auto",
     paddingVertical: 20,
-    zIndex: 1
-  },
-  image: {
-   
-    width: 360,
-    zIndex: 2,
-    left: 7
   },
   logo: {
-    height: 61,
-    zIndex: 3
-  },
-
-  alert: {
     alignItems: 'center',
+    marginBottom: 20,
+  },
+  minicontainer: {
+    backgroundColor: 'white',
+    width: '90%',
+    maxWidth: 400,
+    padding: 20,
+    borderRadius: 10,
+    // se quiser sombra:
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 2,
+    // elevation: 2,
   },
   input: {
-    margin: 10,
+    marginVertical: 6,
     backgroundColor: '#c7c7c7',
-    height: 40,
-    marginBottom: 14,
-    marginTop: 4,
+    height: 44,
     borderWidth: 1,
     borderRadius: 6,
     borderColor: '#390000',
     fontSize: 14,
-    paddingLeft: 15
+    paddingLeft: 12,
   },
   pickerContainer: {
-    margin: 10,
+    marginVertical: 6,
     backgroundColor: '#c7c7c7',
-    marginBottom: 14,
-    marginTop: 4,
     borderWidth: 1,
     borderRadius: 6,
     borderColor: '#390000',
     overflow: 'hidden'
   },
   picker: {
-    height: 40,
+    height: 44,
     width: '100%',
   },
   pickerItem: {
@@ -387,7 +367,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   loaderContainer: {
-    margin: 10,
+    marginVertical: 10,
     padding: 15,
     alignItems: 'center',
     justifyContent: 'center'
@@ -402,41 +382,40 @@ const styles = StyleSheet.create({
   },
   icon: {
     position: 'absolute',
-    right: 20,
-    top: 13,
+    right: 12,
+    top: Platform.OS === 'ios' ? 12 : 10,
     zIndex: 1
   },
   error: {
     color: '#ce2340',
     alignSelf: 'flex-start',
-    marginLeft: 15,
-    fontSize: 14,
-    marginTop: -10,
-    marginBottom: 5
+    marginLeft: 4,
+    fontSize: 13,
+    marginTop: -4,
+    marginBottom: 4
   },
   debugInfo: {
     color: '#666',
     alignSelf: 'center',
     fontSize: 12,
-    marginBottom: 5
+    marginBottom: 6
   },
   btn: {
-    width: 320,
-    height: 70,
+    width: '100%',
+    height: 50,
     alignSelf: 'center',
-    marginTop: 24,
+    marginTop: 20,
     borderRadius: 10,
+    overflow: 'hidden'
   },
   button: {
-    width: '100%',
-    height: '100%',
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
   },
   txtBtn: {
     color: 'white',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold'
   },
   conta: {
@@ -453,7 +432,7 @@ const styles = StyleSheet.create({
   btnlogin: {
     backgroundColor: 'black',
     width: 120,
-    height: 50,
+    height: 44,
     margin: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -461,7 +440,7 @@ const styles = StyleSheet.create({
   },
   txtlogin: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold'
   }
 });

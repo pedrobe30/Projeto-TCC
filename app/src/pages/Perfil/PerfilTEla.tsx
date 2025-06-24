@@ -1,23 +1,43 @@
+// app/src/pages/Perfil/PerfilTEla.tsx
+
 import React from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import FooterNav from '../../services/FooterNav'; // Import your FooterNav component
+import FooterNav from '../../services/FooterNav';
+import { logout } from '../../services/LoginService'; // <-- 1. Importe a função de logout
 
 export default function Perfil() {  
   const navigation = useNavigation();
-  const route = useRoute(); // pega a rota atual
+
+  const irParaEncomendas = () => {
+    navigation.navigate('Encomenda');
+  };
+
+  const irParaCarrinho = () => {
+    navigation.navigate('Carrinho');
+  };
+
+  // 2. Função de logout CORRIGIDA E MELHORADA
+  const handleLogout = async () => {
+    await logout(); // Limpa o token do Storage
+    // Reseta a navegação para o fluxo de autenticação
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Autenticacao' }],
+    });
+  };
 
   return (
     <View style={styles.container}>
-      {/* Menu Options */}
+      {/* ... o resto do seu JSX permanece o mesmo ... */}
       <View style={styles.menu}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={irParaCarrinho}>
           <Text style={styles.menuText}>Meu Carrinho</Text>
           <Ionicons name="cart-outline" size={24} color="#FFF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={irParaEncomendas}>
           <Text style={styles.menuText}>Minhas Encomendas</Text>
           <MaterialIcons name="inventory" size={24} color="#FFF" />
         </TouchableOpacity>
@@ -27,19 +47,17 @@ export default function Perfil() {
           <Ionicons name="help-circle-outline" size={24} color="#FFF" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Text style={styles.menuText}>Sair</Text>
           <Ionicons name="exit-outline" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
-
-      {/* Footer Navigation com Perfil incluído */}
       <FooterNav />
-      </View>
+    </View>
   );
 }
 
-
+// ... seus estilos permanecem os mesmos ...
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -64,25 +82,5 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     color: '#fff',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    backgroundColor: '#8C1111',
-    paddingVertical: 10,
-    borderRadius: 30,
-    width: '80%',
-    alignSelf: 'center',
-    position: 'absolute',
-    bottom: 0,
-  },
-  footerButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#000',
-    borderRadius: 50,
-    width: 45,
-    height: 45,
   },
 });

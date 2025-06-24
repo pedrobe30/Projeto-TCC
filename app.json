@@ -1,5 +1,19 @@
 {
   "expo": {
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos da câmera para tirar foto do produto",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar a galeria para escolher imagem do produto"
+      }
+    }
+  },
     "name": "VestEtec",
     "slug": "VestEtec",
     "version": "1.0.0",
@@ -25,4 +39,4 @@
       "favicon": "./assets/favicon.png"
     }
   }
-}
+

@@ -1,68 +1,46 @@
-// ProductCard.js
+// ProductCard.tsx
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import {api_img} from '../../services/api'
-
-
+import { api_img } from '../../services/api';
 
 const ProductCard = ({ product, onPress }) => {
-  console.log('Dados do produto no card:', JSON.stringify(product, null, 2));
-  return (
-        <TouchableOpacity style={styles.card} onPress={() => onPress && onPress(product)}>
-            <View style={styles.contImage}>
+  // Fallback para caso 'product' seja nulo ou indefinido
+  if (!product) {
+    return null;
+  }
 
-                <LinearGradient
-            colors={['#FFF6F6', '#C6C5C5']}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+  const productName = `${product.categoriaNome || ''} ${product.modeloNome || ''}`.trim();
+
+  return (
+    <TouchableOpacity style={styles.card} onPress={() => onPress && onPress(product)} activeOpacity={0.8}>
+      <View style={styles.imageContainer}>
+        <LinearGradient
+          colors={['#FFFFFF', '#EAEAEA']}
+          style={styles.gradient}
         />
         <Image
-            source={{ uri: `${api_img}${product.imgUrl}`}} 
-            style={styles.image} 
-            resizeMode="cover"
+          source={{ uri: `${api_img}${product.imgUrl}` }} 
+          style={styles.image} 
+          resizeMode="contain"
         />
-             
-        </View>
-      <View style={styles.infoContainer}>
-   
-        <View style={styles.details}>
-          <View style={styles.detailRow}>
-           
-            <Text style={styles.value}>{product.categoriaNome }</Text> <Text> </Text>
-            <Text style={styles.value}>{product.modeloNome}</Text> <Text> </Text>
-             <Text style={styles.value}>{product.tecidoNome}</Text>
-             
-          </View>
-          
-          {/* <View style={styles.detailRow}>
-            <Text style={styles.label}>Modelo: </Text>
-            <Text style={styles.value}>{product.modeloNome}</Text>
-          </View> */}
-          
-          {/* {product.tecidoNome && (
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Tecido: </Text>
-              <Text style={styles.value}>{product.tecidoNome}</Text>
-            </View>
-          )} */}
-          
-          {/* <View style={styles.detailRow}>
-            <Text style={styles.label}>Estoque: </Text>
-            <Text style={styles.value}>{product.quantEstoque}</Text>
-          </View> */}
-        </View>
-        
-        <View style={styles.footer}>
-          <Text style={styles.price}>R$ {product.preco.toFixed(2)}</Text>
-          <View style={[
+        <View style={[
             styles.statusBadge, 
             { backgroundColor: product.idStatus === 1 ? '#28a745' : '#dc3545' }
           ]}>
             <Text style={styles.statusText}>{product.statusNome}</Text>
-          </View>
         </View>
+      </View>
+      <View style={styles.infoContainer}>
+        <Text style={styles.title} numberOfLines={2}>
+          {productName}
+        </Text>
+        {product.tecidoNome && (
+          <Text style={styles.fabric} numberOfLines={1}>
+            Tecido: {product.tecidoNome}
+          </Text>
+        )}
+        <Text style={styles.price}>R$ {product.preco?.toFixed(2) || '0.00'}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -70,94 +48,68 @@ const ProductCard = ({ product, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#CDCDCD',
-    marginBottom: 16,
+    flex: 1,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
-    marginLeft: 50,
-    height: 270,
-    width: 250,
-    
+    margin: 8, // Espaçamento para o modo de 2 colunas
   },
-  contImage:
-  {
-    width: '82%',
-    height: 200,
-    position: 'relative',
-    zIndex:3,
-     justifyContent: 'center',
+  imageContainer: {
+    width: '100%',
+    aspectRatio: 1, // Mantém o container quadrado
     alignItems: 'center',
-    textAlign: 'center'
+    justifyContent: 'center',
+    position: 'relative',
+    padding: 10,
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   image: {
-    width: '70%',
-    height: '80%',
-     marginLeft: 30,
-     marginTop: 15,
-    marginBottom: 15,
-
-  },
-  gradient:
-  {
-    position: 'absolute',
-    top: 10,
-    left: 30,
-    right: 0,
-    bottom: 10,
-  
-  },
-  infoContainer: {
-    flex: 1,
-    padding: 12,
-    justifyContent: 'space-between',
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    marginTop:0
-  },
-  details: {
-    flex: 1,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 14,
-    color: '#666',
-  },
-  value: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  price: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#A30101',
+    width: '90%',
+    height: '90%',
   },
   statusBadge: {
-    paddingVertical: 2,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingVertical: 3,
     paddingHorizontal: 8,
-    borderRadius: 4,
+    borderRadius: 12,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: 'bold',
+  },
+  infoContainer: {
+    padding: 12,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    minHeight: 34, // Garante altura para 2 linhas
+  },
+  fabric: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#A30101',
+    marginTop: 8,
   },
 });
 

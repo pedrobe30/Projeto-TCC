@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://172.18.101.2:7024/api/Aluno';
+const API_URL = 'http://10.0.0.168:5260/api/Aluno';
 
-export const api_img = 'http://172.18.101.2:7024'
+export const api_img = 'http://10.0.0.168:5260'
 
 const api = axios.create({
     baseURL: API_URL,

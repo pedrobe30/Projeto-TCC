@@ -14,14 +14,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { api_img } from '../../services/api';
-// Importar o serviço de carrinho
-import { carrinhoService } from '../../services/CarrinhoService'; // Ajuste o caminho conforme necessário
+import { carrinhoService } from '../../services/CarrinhoService';
+import { produtoService } from '../../services/ProdutoApii';
 
 // Definir tipos para melhor TypeScript
+interface TamanhoQuantidade {
+  tamanho: string;
+  quantidade: number;
+}
+
 interface Product {
   idProd: number;
   preco: number;
-  quantEstoque: number;
+  quantEstoque: number; // Quantidade total calculada
+  tamanhosQuantidades?: TamanhoQuantidade[]; // Array de tamanhos/quantidades do backend
+  tamanhosDisponiveis?: string[]; // Tamanhos com estoque > 0
   idCategoria: number;
   idModelo: number;
   idTecido?: number;
@@ -31,6 +38,7 @@ interface Product {
   modeloNome: string;
   tecidoNome?: string;
   statusNome: string;
+  descricao?: string;
 }
 
 interface RouteParams {
@@ -43,7 +51,6 @@ const ProductDetailScreen = () => {
   const route = useRoute<ProductDetailRouteProp>();
   const navigation = useNavigation();
   
-  // Verificação segura do produto com tipagem
   const product = route.params?.product;
   
   // Estados para controle da interface
@@ -51,15 +58,49 @@ const ProductDetailScreen = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   
-  // Tamanhos disponíveis (você pode adaptar conforme sua necessidade)
-  const availableSizes = ['P', 'M', 'G', 'GG'];
+  // Obter tamanhos disponíveis do produto
+  const getAvailableSizes = () => {
+    if (!product) return [];
+    
+    // Se o produto tem tamanhosQuantidades, usar eles
+    if (product.tamanhosQuantidades && Array.isArray(product.tamanhosQuantidades)) {
+      return product.tamanhosQuantidades
+        .filter(item => item.quantidade > 0)
+        .map(item => item.tamanho)
+        .sort(); // Ordenar alfabeticamente
+    }
+    
+    // Fallback para tamanhos padrão se não houver informação específica
+    return ['P', 'M', 'G', 'GG'];
+  };
+  
+  // Obter quantidade máxima disponível para o tamanho selecionado
+  const getMaxQuantityForSize = (tamanho) => {
+    if (!product || !tamanho) return 0;
+    
+    if (product.tamanhosQuantidades && Array.isArray(product.tamanhosQuantidades)) {
+      const itemEstoque = product.tamanhosQuantidades.find(
+        item => item.tamanho && item.tamanho.toUpperCase() === tamanho.toUpperCase()
+      );
+      return itemEstoque ? itemEstoque.quantidade : 0;
+    }
+    
+    // Fallback para estoque total
+    return product.quantEstoque || 0;
+  };
   
   // Funções para controle de quantidade
   const increaseQuantity = () => {
-    if (product && quantity < product.quantEstoque) {
+    if (!selectedSize) {
+      Alert.alert('Atenção', 'Por favor, selecione um tamanho primeiro');
+      return;
+    }
+    
+    const maxQuantity = getMaxQuantityForSize(selectedSize);
+    if (quantity < maxQuantity) {
       setQuantity(quantity + 1);
     } else {
-      Alert.alert('Aviso', 'Quantidade máxima disponível em estoque');
+      Alert.alert('Aviso', `Quantidade máxima disponível para o tamanho ${selectedSize}: ${maxQuantity}`);
     }
   };
   
@@ -69,7 +110,13 @@ const ProductDetailScreen = () => {
     }
   };
   
-  // Função para adicionar ao carrinho - CORRIGIDA
+  // Resetar quantidade quando mudar tamanho
+  const handleSizeSelection = (size) => {
+    setSelectedSize(size);
+    setQuantity(1); // Resetar quantidade ao mudar tamanho
+  };
+  
+  // Função para adicionar ao carrinho
   const handleAddToCart = async () => {
     if (!product) return;
     
@@ -78,8 +125,14 @@ const ProductDetailScreen = () => {
       return;
     }
     
-    if (quantity > product.quantEstoque) {
-      Alert.alert('Erro', 'Quantidade indisponível no estoque');
+    const maxQuantityForSize = getMaxQuantityForSize(selectedSize);
+    if (quantity > maxQuantityForSize) {
+      Alert.alert('Erro', `Quantidade indisponível no estoque para o tamanho ${selectedSize}. Disponível: ${maxQuantityForSize}`);
+      return;
+    }
+    
+    if (maxQuantityForSize === 0) {
+      Alert.alert('Erro', `Tamanho ${selectedSize} indisponível no momento`);
       return;
     }
     
@@ -94,6 +147,7 @@ const ProductDetailScreen = () => {
         tecidoNome: product.tecidoNome,
         preco: product.preco,
         imgUrl: product.imgUrl,
+        descricao: product.descricao
       };
       
       // Adicionar ao carrinho usando o serviço com tamanho
@@ -111,7 +165,6 @@ const ProductDetailScreen = () => {
           {
             text: 'Ver Carrinho',
             onPress: () => {
-              // Navegar para o carrinho - ajuste o nome da rota conforme necessário
               navigation.navigate('Carrinho' as never);
             }
           }
@@ -153,6 +206,9 @@ const ProductDetailScreen = () => {
       </SafeAreaView>
     );
   }
+  
+  const availableSizes = getAvailableSizes();
+  const maxQuantityForSelectedSize = selectedSize ? getMaxQuantityForSize(selectedSize) : 0;
   
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -217,70 +273,94 @@ const ProductDetailScreen = () => {
             <Text style={styles.fabricText}>Material: {product.tecidoNome}</Text>
           )}
           
+          {product.descricao && (
+            <Text style={styles.descriptionText}>{product.descricao}</Text>
+          )}
+          
           <Text style={styles.priceText}>R$ {product.preco.toFixed(2)}</Text>
           
           <Text style={styles.stockText}>
-            Estoque disponível: {product.quantEstoque} unidades
+            Estoque total disponível: {product.quantEstoque} unidades
           </Text>
           
           {/* Seletor de tamanhos */}
           <View style={styles.sizeSection}>
             <Text style={styles.sectionTitle}>Tamanho:</Text>
-            <View style={styles.sizeOptions}>
-              {availableSizes.map((size) => (
-                <TouchableOpacity
-                  key={size}
-                  style={[
-                    styles.sizeButton,
-                    selectedSize === size && styles.sizeButtonSelected
-                  ]}
-                  onPress={() => setSelectedSize(size)}
-                >
-                  <Text style={[
-                    styles.sizeButtonText,
-                    selectedSize === size && styles.sizeButtonTextSelected
-                  ]}>
-                    {size}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {availableSizes.length > 0 ? (
+              <View style={styles.sizeOptions}>
+                {availableSizes.map((size) => {
+                  const quantidadeDisponivel = getMaxQuantityForSize(size);
+                  return (
+                    <TouchableOpacity
+                      key={size}
+                      style={[
+                        styles.sizeButton,
+                        selectedSize === size && styles.sizeButtonSelected,
+                        quantidadeDisponivel === 0 && styles.sizeButtonDisabled
+                      ]}
+                      onPress={() => quantidadeDisponivel > 0 && handleSizeSelection(size)}
+                      disabled={quantidadeDisponivel === 0}
+                    >
+                      <Text style={[
+                        styles.sizeButtonText,
+                        selectedSize === size && styles.sizeButtonTextSelected,
+                        quantidadeDisponivel === 0 && styles.sizeButtonTextDisabled
+                      ]}>
+                        {size}
+                      </Text>
+                      <Text style={[
+                        styles.sizeQuantityText,
+                        quantidadeDisponivel === 0 && styles.sizeButtonTextDisabled
+                      ]}>
+                        ({quantidadeDisponivel})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={styles.noSizesText}>Nenhum tamanho disponível</Text>
+            )}
           </View>
           
           {/* Controle de quantidade */}
-          <View style={styles.quantitySection}>
-            <Text style={styles.sectionTitle}>Quantidade:</Text>
-            <View style={styles.quantityControls}>
-              <TouchableOpacity
-                style={[styles.quantityButton, quantity <= 1 && styles.quantityButtonDisabled]}
-                onPress={decreaseQuantity}
-                disabled={quantity <= 1}
-              >
-                <Ionicons 
-                  name="remove" 
-                  size={20} 
-                  color={quantity <= 1 ? '#ccc' : '#333'} 
-                />
-              </TouchableOpacity>
-              
-              <Text style={styles.quantityText}>{quantity}</Text>
-              
-              <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  quantity >= product.quantEstoque && styles.quantityButtonDisabled
-                ]}
-                onPress={increaseQuantity}
-                disabled={quantity >= product.quantEstoque}
-              >
-                <Ionicons 
-                  name="add" 
-                  size={20} 
-                  color={quantity >= product.quantEstoque ? '#ccc' : '#333'} 
-                />
-              </TouchableOpacity>
+          {selectedSize && (
+            <View style={styles.quantitySection}>
+              <Text style={styles.sectionTitle}>
+                Quantidade (máx: {maxQuantityForSelectedSize}):
+              </Text>
+              <View style={styles.quantityControls}>
+                <TouchableOpacity
+                  style={[styles.quantityButton, quantity <= 1 && styles.quantityButtonDisabled]}
+                  onPress={decreaseQuantity}
+                  disabled={quantity <= 1}
+                >
+                  <Ionicons 
+                    name="remove" 
+                    size={20} 
+                    color={quantity <= 1 ? '#ccc' : '#333'} 
+                  />
+                </TouchableOpacity>
+                
+                <Text style={styles.quantityText}>{quantity}</Text>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.quantityButton,
+                    quantity >= maxQuantityForSelectedSize && styles.quantityButtonDisabled
+                  ]}
+                  onPress={increaseQuantity}
+                  disabled={quantity >= maxQuantityForSelectedSize}
+                >
+                  <Ionicons 
+                    name="add" 
+                    size={20} 
+                    color={quantity >= maxQuantityForSelectedSize ? '#ccc' : '#333'} 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
       
@@ -415,7 +495,13 @@ const styles = StyleSheet.create({
   fabricText: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 8,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 12,
+    lineHeight: 20,
   },
   priceText: {
     fontSize: 28,
@@ -443,19 +529,23 @@ const styles = StyleSheet.create({
   },
   sizeButton: {
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',
     marginRight: 12,
     marginBottom: 8,
-    minWidth: 50,
+    minWidth: 60,
     alignItems: 'center',
   },
   sizeButtonSelected: {
     backgroundColor: '#333',
     borderColor: '#333',
+  },
+  sizeButtonDisabled: {
+    backgroundColor: '#f8f8f8',
+    borderColor: '#eee',
   },
   sizeButtonText: {
     fontSize: 16,
@@ -464,6 +554,19 @@ const styles = StyleSheet.create({
   },
   sizeButtonTextSelected: {
     color: '#fff',
+  },
+  sizeButtonTextDisabled: {
+    color: '#ccc',
+  },
+  sizeQuantityText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  noSizesText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
   },
   quantitySection: {
     marginBottom: 24,
