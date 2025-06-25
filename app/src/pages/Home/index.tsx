@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   TextInput,
@@ -7,96 +7,70 @@ import {
   Keyboard,
   Animated,
   SafeAreaView,
-  ScrollView,
   Image,
   Dimensions,
-  FlatList
+  FlatList,
+  Text,
+  ScrollView // Importe o ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import FooterNav from '../../services/FooterNav';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Video, ResizeMode } from 'expo-av'; 
+import { produtoService } from '../../services/ProdutoApii';
+import { api_img } from '../../services/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function Home() {
   const [consulta, setConsulta] = useState('');
   const [isFoco, setIsFoco] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [produtosPopulares, setProdutosPopulares] = useState([]);
+  const [isScreenFocused, setIsScreenFocused] = useState(true);
   const animacao = new Animated.Value(0);
   const carouselRef = useRef(null);
-  const intervalRef = useRef(null);
 
   const navigation = useNavigation();
-  const route = useRoute();
 
-  // Dados do carrossel
   const banners = [
     { id: 1, image: require('../../assets/Banner1.png') },
-    { id: 2, image: require('../../assets/Banner2.png') }
+    { id: 2, image: require('../../assets/Banner2.png') },
+    { id: 3, image: require('../../assets/Banner3.png')},
+    { id: 4, image: require('../../assets/Banner4.png')}
   ];
+  
+  useFocusEffect(
+    useCallback(() => {
+      setIsScreenFocused(true);
+      return () => {
+        setIsScreenFocused(false);
+      };
+    }, [])
+  );
 
-  // Auto-scroll do carrossel
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % banners.length;
-        carouselRef.current?.scrollToIndex({ 
-          index: nextIndex, 
-          animated: true 
-        });
-        return nextIndex;
-      });
-    }, 4000); // Muda a cada 4 segundos
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+    const fetchProdutos = async () => {
+      const response = await produtoService.getAllProdutos();
+      if (response.status && Array.isArray(response.dados)) {
+        setProdutosPopulares(response.dados.slice(0, 10)); 
       }
     };
+    fetchProdutos();
   }, []);
-
-  const onPesquisa = (texto) => {
-    console.log("Pesquisando por:", texto);
-  };
-
+  
   const handleFoco = () => {
     setIsFoco(true);
-    Animated.timing(animacao, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: false
-    }).start();
+    Animated.timing(animacao, { toValue: 1, duration: 200, useNativeDriver: false }).start();
   };
-
   const handleBlur = () => {
     setIsFoco(false);
-    Animated.timing(animacao, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handleBusca = () => {
-    if (consulta.trim()) {
-      onPesquisa(consulta);
-      Keyboard.dismiss();
-    }
-  };
-
-  const clearSearch = () => {
-    setConsulta('');
-    onPesquisa('');
+    Animated.timing(animacao, { toValue: 0, duration: 200, useNativeDriver: false }).start();
   };
 
   const borderColor = animacao.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#e0e0e0', '#3498db'],
-  });
-
-  const shadowOpacity = animacao.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.1, 0.3],
+    outputRange: ['rgba(255, 255, 255, 0.3)', '#fff'],
   });
 
   const renderBanner = ({ item }) => (
@@ -105,70 +79,53 @@ export default function Home() {
     </View>
   );
 
-  const onScroll = (event) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / screenWidth);
-    setCurrentIndex(index);
-  };
-
-  const goToSlide = (index) => {
-    carouselRef.current?.scrollToIndex({ index, animated: true });
-    setCurrentIndex(index);
-  };
+  const renderProduto = ({ item }) => (
+    <TouchableOpacity 
+        style={styles.productItem} 
+        onPress={() => navigation.navigate('ProductDetail', { product: item })}
+        activeOpacity={0.8}
+    >
+      <Image source={{ uri: `${api_img}${item.imgUrl}` }} style={styles.productImage} />
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={2}>{`${item.categoriaNome} ${item.modeloNome}`}</Text>
+        <Text style={styles.productPrice}>R$ {item.preco?.toFixed(2)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#4A0505', '#051773']}
+        locations={[0.3, 0.91]} 
+        start={{ x: 0.9, y: 0.1 }}
+        end={{ x: 0.1, y: 0.9 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      
       <View style={{ flex: 1, paddingBottom: 80 }}>
+        {/* Alterado de View para ScrollView para permitir rolagem */}
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}></View>
+          <View style={styles.header}>
+            <Image 
+              style={styles.logo} 
+              source={require('../../assets/Vestetec-removebg-preview.png')} 
+            /> 
+            <Animated.View style={[styles.barra, { borderColor: borderColor }]}>
+              <Ionicons name="search-outline" size={20} color={isFoco ? '#fff' : '#ccc'} style={styles.IconePesquisa}/>
+              <TextInput
+                style={styles.input}
+                placeholder="O que Procura?"
+                placeholderTextColor="#ccc"
+                value={consulta}
+                onChangeText={setConsulta}
+                onFocus={handleFoco}
+                onBlur={handleBlur}
+                returnKeyType="search"
+              />
+            </Animated.View>
+          </View>
 
-          {/* Logo */}
-          <Image 
-            style={styles.logo} 
-            source={require('../../assets/Vestetec-removebg-preview.png')} 
-          /> 
-
-          {/* Barra de Pesquisa */}
-          <Animated.View 
-            style={[
-              styles.barra, 
-              {
-                borderColor: borderColor,
-                shadowOpacity: shadowOpacity,
-              }
-            ]}
-          >
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color={isFoco ? '#3498db' : '#888'}
-              style={styles.IconePesquisa}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="O que Procura?"
-              value={consulta}
-              onChangeText={setConsulta}
-              onFocus={handleFoco}
-              onBlur={handleBlur}
-              onSubmitEditing={handleBusca}
-              returnKeyType="search"
-            />
-            {consulta.length > 0 && (
-              <TouchableOpacity onPress={clearSearch} style={styles.LimparBarra}>
-                <Ionicons name="close-circle" size={18} color="#888" />
-              </TouchableOpacity>
-            )}
-            {isFoco && (
-              <TouchableOpacity onPress={handleBusca} style={styles.PesquisaButton}>
-                <View style={styles.searchButtonContainer}>
-                  <Ionicons name="arrow-forward" size={16} color="#fff" />
-                </View>
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-
-          {/* Carrossel de Banners */}
           <View style={styles.carouselSection}>
             <FlatList
               ref={carouselRef}
@@ -178,55 +135,45 @@ export default function Home() {
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
-              onScroll={onScroll}
-              scrollEventThrottle={16}
-              onScrollBeginDrag={() => {
-                // Para o auto-scroll quando o usuário interage
-                if (intervalRef.current) {
-                  clearInterval(intervalRef.current);
-                }
-              }}
-              onScrollEndDrag={() => {
-                // Reinicia o auto-scroll após a interação
-                intervalRef.current = setInterval(() => {
-                  setCurrentIndex(prevIndex => {
-                    const nextIndex = (prevIndex + 1) % banners.length;
-                    carouselRef.current?.scrollToIndex({ 
-                      index: nextIndex, 
-                      animated: true 
-                    });
-                    return nextIndex;
-                  });
-                }, 4000);
-              }}
             />
-            
-            {/* Indicadores de página */}
-            <View style={styles.pageIndicators}>
-              {banners.map((_, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.indicator,
-                    {
-                      backgroundColor: currentIndex === index ? '#3498db' : '#d0d0d0',
-                      transform: [{ scale: currentIndex === index ? 1.2 : 1 }]
-                    }
-                  ]}
-                  onPress={() => goToSlide(index)}
-                />
-              ))}
-            </View>
+          </View>
+          
+          <View style={styles.videoContainer}>
+              <Video
+                source={require('../../assets/anuncio1.mp4')}
+                style={styles.video}
+                resizeMode={ResizeMode.COVER} 
+                isLooping={true}
+                isMuted={true}
+                shouldPlay={isScreenFocused}
+              />
+          </View>
+          
+          <View style={styles.productSection}>
+              <Text style={styles.sectionTitle}>Produtos mais encomendados</Text>
+              <FlatList
+                data={produtosPopulares}
+                renderItem={renderProduto}
+                keyExtractor={(item) => item.idProd.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 15, paddingVertical: 10 }}
+              />
           </View>
 
-          {/* Espaço adicional para mais conteúdo futuro */}
-          <View style={styles.contentSection}>
-            {/* Aqui você pode adicionar mais seções como categorias, produtos em destaque, etc. */}
+          <View style={styles.videoContainer}>
+               <Video
+                source={require('../../assets/anuncio2.mp4')}
+                style={styles.video}
+                resizeMode={ResizeMode.COVER}
+                isLooping={true}
+                isMuted={true}
+                shouldPlay={isScreenFocused}
+              />
           </View>
         </ScrollView>
       </View>
 
-      {/* Footer fixo */}
       <FooterNav />
     </SafeAreaView>
   );
@@ -235,32 +182,30 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000',
   },
+  // Container do cabeçalho para mantê-lo fixo no topo
   header: {
-    padding: 10,
+    paddingTop: 10,
+    paddingBottom: 5,
   },
   logo: {
-    width: 150,
-    height: 50,
+    width: 140,
+    height: 40,
     alignSelf: 'center',
     resizeMode: 'contain',
-    marginVertical: 10,
+    tintColor: 'white',
+    marginBottom: 10,
   },
   barra: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderWidth: 1,
     borderRadius: 25,
     paddingHorizontal: 15,
     marginHorizontal: 15,
-    marginVertical: 10,
-    height: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 3,
+    height: 45,
   },
   IconePesquisa: {
     marginRight: 10,
@@ -269,69 +214,84 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: '#333',
+    color: '#fff',
   },
-  LimparBarra: {
-    paddingHorizontal: 5,
-  },
-  PesquisaButton: {
-    marginLeft: 10,
-  },
-  searchButtonContainer: {
-    backgroundColor: '#3498db',
-    borderRadius: 20,
-    padding: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Estilos do Carrossel
   carouselSection: {
-    marginVertical: 20,
+    // Carrossel bem maior
+    height: screenWidth * 0.60, 
+    marginVertical: 15, // Espaçamento
   },
   bannerContainer: {
     width: screenWidth,
     paddingHorizontal: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bannerImage: {
     width: '100%',
-    height: 290,
+    height: '100%',
     borderRadius: 12,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
-  pageIndicators: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 15,
+  videoContainer: {
+    // Vídeos bem maiores
+    height: screenWidth * 0.55, 
+    marginHorizontal: 15,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: 'black',
+    marginVertical: 15, // Espaçamento
   },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  contentSection: {
-    paddingHorizontal: 15,
-    paddingBottom: 20,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    backgroundColor: '#808080',
-    paddingVertical: 10,
-    borderRadius: 30,
-    width: '80%',
-    alignSelf: 'center',
+  video: {
     position: 'absolute',
+    top: 0,
+    left: 0,
     bottom: 0,
+    right: 0,
   },
-  footerButton: {
-    alignItems: 'center',
+  productSection: {
+    // Seção de produtos também maior
+    height: screenWidth * 0.50, 
+    marginVertical: 15, // Espaçamento
+  },
+  sectionTitle: {
+    fontSize: 20, // Título um pouco maior
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 15,
+    marginBottom: 10,
+  },
+  productItem: {
+    width: screenWidth * 0.40, // Largura do card aumentada
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    marginRight: 12,
+    overflow: 'hidden',
+    justifyContent: 'space-between',
+  },
+  productImage: {
+    width: '100%',
+    height: '60%',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    resizeMode: 'contain',
+  },
+  productInfo: {
+    padding: 10,
+    height: '40%',
     justifyContent: 'center',
-    backgroundColor: '#000',
-    borderRadius: 50,
-    width: 45,
-    height: 45,    
+  },
+  productName: {
+    color: '#f0f0f0',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  productPrice: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
 });

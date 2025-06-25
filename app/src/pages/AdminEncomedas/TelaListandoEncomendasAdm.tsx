@@ -192,7 +192,7 @@ export default function TelaListandoEncomendasAdm({ navigation }: any) {
             <TouchableOpacity style={styles.modalContainer} activeOpacity={1} onPressOut={() => setModalStatusVisible(false)}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Selecione o novo status:</Text>
-                    {['PENDENTE', 'CONFIRMADA', 'ENVIADO', 'ENTREGUE', 'CANCELADA'].map(status => (
+                    {['PENDENTE', 'CONFIRMADA', 'ENTREGUE', 'CANCELADA'].map(status => (
                         <TouchableOpacity key={status} style={styles.modalOption} onPress={() => handleAtualizarStatus(status)}>
                             <Text style={styles.modalOptionText}>{status}</Text>
                         </TouchableOpacity>
