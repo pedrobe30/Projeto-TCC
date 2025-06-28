@@ -102,7 +102,7 @@ export default function TelaPrincipalAdm() {
       const todasEncomendas: Encomenda[] = resultadosPorStatus.flat();
 
       const faturamento = todasEncomendas
-        .filter(e => ['ENTREGUE', 'CONFIRMADA', 'PROCESSANDO'].includes(e.situacao.toUpperCase()))
+        .filter(e => ['ENTREGUE'].includes(e.situacao.toUpperCase()))
         .reduce((acc, enc) => acc + (Number(enc.precoEncomenda) || 0), 0);
 
       const totalEncomendas = todasEncomendas.length;

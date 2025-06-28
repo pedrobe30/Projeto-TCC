@@ -44,7 +44,7 @@ export default function AdminDrawerNavigator() {
         component={TelaPrincipalAdm}
         options={{
           title: 'Dashboard',
-          drawerIcon: ({ color, size }) => <Ionicons name="apps-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="apps-outline" color={color} size={size} padding={17} />,
         }}
       />
       <Drawer.Screen
@@ -52,7 +52,7 @@ export default function AdminDrawerNavigator() {
         component={TelaListandoEncomendasAdm}
         options={{
           title: 'Gerenciar Encomendas',
-          drawerIcon: ({ color, size }) => <Ionicons name="receipt-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="receipt-outline" color={color}  padding={17} />,
         }}
       />
       <Drawer.Screen
@@ -60,7 +60,7 @@ export default function AdminDrawerNavigator() {
         component={TelaListandoProduto}
         options={{
           title: 'Gerenciar Produtos',
-          drawerIcon: ({ color, size }) => <Ionicons name="shirt-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="shirt-outline" color={color}  padding={17} />,
         }}
       />
       <Drawer.Screen
@@ -68,7 +68,7 @@ export default function AdminDrawerNavigator() {
         component={TelaCategorias}
         options={{
           title: 'Gerenciar Categorias',
-          drawerIcon: ({ color, size }) => <Ionicons name="grid-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="grid-outline" color={color}  padding={17} />,
         }}
       />
       <Drawer.Screen
@@ -76,7 +76,7 @@ export default function AdminDrawerNavigator() {
         component={TelaModelos}
         options={{
           title: 'Gerenciar Modelos',
-          drawerIcon: ({ color, size }) => <Ionicons name="layers-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="layers-outline" color={color}  padding={17} />,
         }}
       />
        <Drawer.Screen
@@ -84,7 +84,7 @@ export default function AdminDrawerNavigator() {
         component={TelaTecidos}
         options={{
           title: 'Gerenciar Tecidos',
-          drawerIcon: ({ color, size }) => <Ionicons name="cut-outline" color={color} size={size} />,
+          drawerIcon: ({ color, size }) => <Ionicons name="cut-outline" color={color}  padding={17} />,
         }}
       />
     </Drawer.Navigator>

@@ -67,7 +67,7 @@ export function CustomDrawerContent(props: any) {
                   text: 'Sair',
                   style: 'destructive',
                   onPress: () => {
-                    // props.navigation.replace('Login');
+                    props.navigation.replace('LoginAdm');
                   },
                 },
               ]
