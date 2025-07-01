@@ -19,15 +19,13 @@ class CadastroProdutoService {
       formData.append('TamanhosQuantidadesJson', tamanhosJson);
       
       // Adicionar imagem se fornecida
-      if (dadosProduto.imagem) {
-        const imageUri = dadosProduto.imagem.uri;
-        const imageName = dadosProduto.imagem.name || `produto_${Date.now()}.jpg`;
-        const imageType = dadosProduto.imagem.type || 'image/jpeg';
-        
-        formData.append('Imagem', {
-          uri: imageUri,
-          type: imageType,
-          name: imageName,
+      if (dadosProduto.imagens && dadosProduto.imagens.length > 0) {
+        dadosProduto.imagens.forEach((imagem, index) => {
+          formData.append('Imagens', { // Chave no plural: "Imagens"
+            uri: imagem.uri,
+            type: imagem.type,
+            name: imagem.name,
+          });
         });
       }
 
@@ -35,7 +33,6 @@ class CadastroProdutoService {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        timeout: 30000, // 30 segundos
       });
 
       return {
@@ -111,16 +108,20 @@ class CadastroProdutoService {
       formData.append('TamanhosQuantidadesJson', tamanhosJson);
       
       // Adicionar imagem se fornecida (opcional na atualização)
-      if (dadosProduto.imagem && dadosProduto.imagem.uri) {
-        const imageUri = dadosProduto.imagem.uri;
-        const imageName = dadosProduto.imagem.name || `produto_${Date.now()}.jpg`;
-        const imageType = dadosProduto.imagem.type || 'image/jpeg';
-        
-        formData.append('Imagem', {
-          uri: imageUri,
-          type: imageType,
-          name: imageName,
+      if (dadosProduto.novasImagens && dadosProduto.novasImagens.length > 0) {
+        dadosProduto.novasImagens.forEach(imagem => {
+          formData.append('NovasImagens', { // Chave: NovasImagens
+            uri: imagem.uri,
+            type: imagem.type,
+            name: imagem.name,
+          });
         });
+      }
+
+       if (dadosProduto.imagensParaManter && dadosProduto.imagensParaManter.length > 0) {
+          dadosProduto.imagensParaManter.forEach(id => {
+              formData.append('ImagensParaManter', id.toString()); // Chave: ImagensParaManter
+          });
       }
 
       const response = await apiCategorias.put(`/Produto/${idProduto}`, formData, {

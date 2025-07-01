@@ -1,9 +1,9 @@
-// app/src/pages/Visualizandoprodutos/TelaAtualizar.tsx (CORRIGIDO)
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image,
   StyleSheet, ActivityIndicator, Modal, SafeAreaView,
 } from 'react-native';
+// <<< IMPORTAÇÃO CORRIGIDA >>>
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,32 +11,45 @@ import { cadastroProdutoService } from '../../services/CadastroProdutoService';
 import { produtoService } from '../../services/ProdutoApii';
 import { API_BASE_URL } from '../../services/config';
 
-// Interfaces (sem alteração)
+// ... (interfaces permanecem as mesmas)
 interface TamanhoQuantidade { tamanho: string; quantidade: number; }
 interface Categoria { idCategoria: number; categoria: string; }
 interface Modelo { idModelo: number; modelo: string; }
 interface Tecido { idTecido: number; tipoTecido: string; }
+interface ImagemExistente { idProdutoImagem: number; imgUrl: string; }
+interface ImagemNova { uri: string; name: string; type: string; }
 
 export default function TelaAtualizar({ route, navigation }: any) {
+  // ... (estados permanecem os mesmos)
   const { produtoId } = route.params;
 
-  // Estados (sem alteração de lógica)
+  // Estados
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [modalImagemVisible, setModalImagemVisible] = useState(false);
+  
+  // Estados do formulário
   const [preco, setPreco] = useState('');
   const [idCategoria, setIdCategoria] = useState<number | undefined>(undefined);
   const [idModelo, setIdModelo] = useState<number | undefined>(undefined);
   const [idTecido, setIdTecido] = useState<number | undefined>(undefined);
   const [idStatus, setIdStatus] = useState<number>(1);
+  const [descricao, setDescricao] = useState('');
   const [tamanhosQuantidades, setTamanhosQuantidades] = useState<TamanhoQuantidade[]>([{ tamanho: '', quantidade: 0 }]);
-  const [imagemSelecionada, setImagemSelecionada] = useState<{ uri: string; name: string; type: string } | null>(null);
-  const [imagemOriginalUrl, setImagemOriginalUrl] = useState<string | null>(null);
+  
+
+  const [imagensExistentes, setImagensExistentes] = useState<ImagemExistente[]>([]);
+  const [novasImagens, setNovasImagens] = useState<ImagemNova[]>([]);
+  const [idsImagensParaRemover, setIdsImagensParaRemover] = useState<number[]>([]);
+
+  // Estados de dados
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [tecidos, setTecidos] = useState<Tecido[]>([]);
+  const [statusOptions, setStatusOptions] = useState<{label: string, value: number}[]>([{label: "Disponível", value: 1}, {label: "Indisponível", value: 2}]);
 
-  // Carregamento de dados (sem alteração de lógica)
+
+  // ... (useEffect de carregamento de dados permanece o mesmo)
   useEffect(() => {
     const carregarDados = async () => {
       setLoadingData(true);
@@ -47,6 +60,7 @@ export default function TelaAtualizar({ route, navigation }: any) {
           cadastroProdutoService.buscarModelos(),
           cadastroProdutoService.buscarTecidos(),
         ]);
+        
         setCategorias(Array.isArray(respCat.dados) ? respCat.dados : []);
         setModelos(Array.isArray(respMod.dados) ? respMod.dados : []);
         setTecidos(Array.isArray(respTec.dados) ? respTec.dados : []);
@@ -58,11 +72,9 @@ export default function TelaAtualizar({ route, navigation }: any) {
           setIdModelo(produto.idModelo);
           setIdTecido(produto.idTecido);
           setIdStatus(produto.idStatus);
+          setDescricao(produto.descricao || '');
           setTamanhosQuantidades(produto.tamanhosQuantidades?.length > 0 ? produto.tamanhosQuantidades : [{ tamanho: '', quantidade: 0 }]);
-          if (produto.imgUrl) {
-            const imageUrl = produto.imgUrl.startsWith('http') ? produto.imgUrl : `${API_BASE_URL.replace('/api', '')}/${produto.imgUrl}`;
-            setImagemOriginalUrl(imageUrl);
-          }
+          setImagensExistentes(produto.imagens || []);
         } else {
           Alert.alert('Erro', 'Produto não encontrado.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
         }
@@ -75,11 +87,69 @@ export default function TelaAtualizar({ route, navigation }: any) {
     carregarDados();
   }, [produtoId]);
 
-  // Funções de manipulação
+
+ 
+
+  const totalImagensAtual = imagensExistentes.filter(img => !idsImagensParaRemover.includes(img.idProdutoImagem)).length + novasImagens.length;
+
+  const handleImagePicker = async (pickerFunction: () => Promise<ImagePicker.ImagePickerResult>) => {
+    if (totalImagensAtual >= 4) {
+      Alert.alert('Limite atingido', 'Você só pode ter no máximo 4 imagens.');
+      setModalImagemVisible(false);
+      return;
+    }
+    try {
+      const result = await pickerFunction();
+      if (!result.canceled && result.assets) {
+        const imgs = result.assets.map(asset => {
+            const uri = asset.uri;
+            const fileName = uri.split('/').pop() || `image_${Date.now()}.jpg`;
+            const type = asset.mimeType || 'image/jpeg';
+            return { uri, name: fileName, type };
+        }).filter(img => img.uri);
+
+        const totalFinal = totalImagensAtual + imgs.length;
+         if (totalFinal > 4) {
+            Alert.alert('Limite Excedido', `Você só pode adicionar mais ${4 - totalImagensAtual} imagens.`);
+            setNovasImagens(prev => [...prev, ...imgs.slice(0, 4 - totalImagensAtual)]);
+         } else {
+            setNovasImagens(prev => [...prev, ...imgs]);
+         }
+      }
+    } catch (error) { Alert.alert('Erro', 'Não foi possível acessar a imagem.'); }
+    finally { setModalImagemVisible(false); }
+  };
+
+  const selecionarImagem = () => handleImagePicker(() => 
+    ImagePicker.launchImageLibraryAsync({ 
+        // <<< SINTAXE CORRIGIDA >>>
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        quality: 1, 
+        allowsMultipleSelection: true, 
+        selectionLimit: 4 - totalImagensAtual 
+    })
+  );
+
+  const tirarFoto = () => handleImagePicker(() => 
+    ImagePicker.launchCameraAsync({ 
+     
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1, 
+        allowsEditing: true, 
+        aspect: [1, 1] 
+    })
+  );
+
+  const removerNovaImagem = (index: number) => setNovasImagens(prev => prev.filter((_, i) => i !== index));
+  const toggleRemoverImagemExistente = (id: number) => {
+    setIdsImagensParaRemover(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  
   const adicionarTamanho = () => setTamanhosQuantidades(prev => [...prev, { tamanho: '', quantidade: 0 }]);
   const removerTamanho = (index: number) => setTamanhosQuantidades(prev => prev.filter((_, i) => i !== index));
-
-  // <<<---- CORREÇÃO APLICADA AQUI ---->>>
   const atualizarTamanho = (index: number, field: 'tamanho' | 'quantidade', value: string) => {
     const copia = [...tamanhosQuantidades];
     if (field === 'tamanho') {
@@ -90,97 +160,109 @@ export default function TelaAtualizar({ route, navigation }: any) {
     setTamanhosQuantidades(copia);
   };
 
-  const handleImagePicker = async (pickerFunction: () => Promise<ImagePicker.ImagePickerResult>) => {
-    try {
-        const result = await pickerFunction();
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const asset = result.assets[0];
-            const name = asset.uri.split('/').pop() || `img.jpg`;
-            const type = `image/${name.split('.').pop()}`;
-            setImagemSelecionada({ uri: asset.uri, name, type });
-        }
-    } catch (error) { Alert.alert('Erro', 'Não foi possível acessar a imagem.'); }
-    finally { setModalImagemVisible(false); }
-  }
-
-  const selecionarImagem = () => handleImagePicker(ImagePicker.launchImageLibraryAsync.bind(null, { quality: 1, allowsEditing: true, aspect: [1, 1] }));
-  const tirarFoto = () => handleImagePicker(ImagePicker.launchCameraAsync.bind(null, { quality: 1, allowsEditing: true, aspect: [1, 1] }));
-
   const handleSubmit = async () => {
-    // Validações (sem alteração de lógica)
-    if (!preco.trim() || isNaN(Number(preco)) || Number(preco) <= 0) { Alert.alert('Validação', 'Informe um preço válido.'); return; }
-    if (!idCategoria || !idModelo || !idTecido || !idStatus) { Alert.alert('Validação', 'Todos os campos com * são obrigatórios.'); return; }
-    const tqValidos = tamanhosQuantidades.filter(tq => tq.tamanho?.trim() && tq.quantidade > 0);
-    if (tqValidos.length === 0) { Alert.alert('Validação', 'Informe ao menos um tamanho com quantidade maior que zero.'); return; }
+    if (!preco.trim() || isNaN(Number(preco)) || Number(preco) <= 0) { Alert.alert('Validação', 'Preço inválido.'); return; }
+    if (!idCategoria || !idModelo || !idTecido) { Alert.alert('Validação', 'Categoria, Modelo e Tecido são obrigatórios.'); return; }
+    if (totalImagensAtual === 0) { Alert.alert('Validação', 'O produto deve ter pelo menos uma imagem.'); return; }
+
+    const idsParaManter = imagensExistentes
+      .filter(img => !idsImagensParaRemover.includes(img.idProdutoImagem))
+      .map(img => img.idProdutoImagem);
 
     const dadosProduto = {
-      preco: parseFloat(preco), idCategoria, idModelo, idTecido, idStatus,
-      descricao: '', imagem: imagemSelecionada, tamanhosQuantidades: tqValidos,
+      preco: parseFloat(preco), idCategoria, idModelo, idTecido, idStatus, descricao,
+      tamanhosQuantidades: tamanhosQuantidades.filter(tq => tq.tamanho?.trim()),
+      novasImagens,
+      imagensParaManter: idsParaManter,
     };
+    
+    console.log("Enviando para o serviço (Atualizar):", {
+        ...dadosProduto,
+        novasImagens: dadosProduto.novasImagens.map(i => ({ name: i.name, type: i.type })) // Log simplificado
+    });
+
     setSubmitting(true);
     try {
       const resp = await cadastroProdutoService.atualizarProduto(produtoId, dadosProduto);
       if (resp.status) {
-        Alert.alert('Sucesso', resp.mensagem || 'Produto atualizado!', [{ text: 'OK', onPress: () => navigation.goBack() }]);
-      } else { Alert.alert('Erro ao Atualizar', resp.mensagem); }
-    } catch (error) { Alert.alert('Erro', 'Falha na comunicação. Tente novamente.'); }
+        Alert.alert('Sucesso', 'Produto atualizado!', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      } else {
+        console.error("Erro da API ao atualizar produto:", resp.mensagem);
+        Alert.alert('Erro ao Atualizar', resp.mensagem || 'Ocorreu um erro desconhecido.');
+      }
+    } catch (error) { 
+        console.error("Erro de comunicação (Atualizar):", error);
+        Alert.alert('Erro', 'Falha na comunicação.'); 
+    }
     finally { setSubmitting(false); }
   };
-
+  
+  // ... (O restante do arquivo, incluindo a UI e os estilos, permanece o mesmo)
+  // ... (função renderHeader e renderização da UI)
   const renderHeader = () => (
     <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
-            <Ionicons name="arrow-back" size={28} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Produto</Text>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}><Ionicons name="arrow-back" size={28} color="#333" /></TouchableOpacity>
+      <Text style={styles.headerTitle}>Editar Produto</Text>
     </View>
   );
 
-  if (loadingData) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        {renderHeader()}
-        <View style={styles.centered}><ActivityIndicator size="large" color="#4A90E2" /></View>
-      </SafeAreaView>
-    );
-  }
-
+  if (loadingData) return <SafeAreaView style={styles.safeArea}><ActivityIndicator style={styles.centered} size="large" /></SafeAreaView>;
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       {renderHeader()}
       <ScrollView contentContainerStyle={styles.container}>
+        
+        <Text style={styles.label}>Imagens (Atuais e Novas)</Text>
         <View style={styles.imagePickerContainer}>
-            <TouchableOpacity onPress={() => setModalImagemVisible(true)}>
-                <Image source={{ uri: imagemSelecionada ? imagemSelecionada.uri : imagemOriginalUrl || 'https://via.placeholder.com/300' }} style={styles.previewImagem} />
-                <View style={styles.imageOverlay}>
-                    <Ionicons name="camera-outline" size={32} color="#FFF" />
+            {/* Imagens Existentes */}
+            {imagensExistentes.map(img => (
+                <View key={img.idProdutoImagem} style={styles.previewImageWrapper}>
+                    <Image source={{ uri: img.imgUrl.startsWith('http') ? img.imgUrl : `${API_BASE_URL.replace('/api', '')}${img.imgUrl}` }} style={styles.previewImagem} />
+                    {idsImagensParaRemover.includes(img.idProdutoImagem) && <View style={styles.imageOverlayRemoved}><Ionicons name="trash" size={30} color="#FFF"/></View>}
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => toggleRemoverImagemExistente(img.idProdutoImagem)}>
+                        <Ionicons name={idsImagensParaRemover.includes(img.idProdutoImagem) ? "refresh-circle" : "trash-bin"} size={28} color={idsImagensParaRemover.includes(img.idProdutoImagem) ? "#27ae60" : "#D0021B"} />
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
+            ))}
+            {/* Novas Imagens */}
+            {novasImagens.map((img, index) => (
+                <View key={index} style={styles.previewImageWrapper}>
+                    <Image source={{ uri: img.uri }} style={styles.previewImagem} />
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => removerNovaImagem(index)}>
+                        <Ionicons name="close-circle" size={28} color="#D0021B" />
+                    </TouchableOpacity>
+                </View>
+            ))}
+            {/* Botão de Adicionar */}
+            {totalImagensAtual < 4 && (
+                <TouchableOpacity style={styles.imagePlaceholder} onPress={() => setModalImagemVisible(true)}>
+                    <Ionicons name="camera-outline" size={40} color="#999" />
+                </TouchableOpacity>
+            )}
         </View>
 
         <Text style={styles.label}>Preço *</Text>
-        <TextInput style={styles.input} value={preco} onChangeText={setPreco} placeholder="R$ 0,00" keyboardType="numeric" />
+        <TextInput style={styles.input} value={preco} onChangeText={setPreco} keyboardType="numeric" />
+
+        <Text style={styles.label}>Descrição</Text>
+        <TextInput style={[styles.input, styles.textArea]} value={descricao} onChangeText={setDescricao} multiline />
 
         <Text style={styles.label}>Categoria *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker selectedValue={idCategoria} onValueChange={(val) => setIdCategoria(val)}>
-            {categorias.map((cat) => <Picker.Item key={cat.idCategoria} label={cat.categoria} value={cat.idCategoria} />)}
-          </Picker>
-        </View>
-        
+        <View style={styles.pickerContainer}><Picker selectedValue={idCategoria} onValueChange={setIdCategoria}>{categorias.map(c => <Picker.Item key={c.idCategoria} label={c.categoria} value={c.idCategoria} />)}</Picker></View>
         <Text style={styles.label}>Modelo *</Text>
-        <View style={styles.pickerContainer}><Picker selectedValue={idModelo} onValueChange={setIdModelo}>{modelos.map(m => <Picker.Item key={m.idModelo} label={m.modelo} value={m.idModelo}/>)}</Picker></View>
+        <View style={styles.pickerContainer}><Picker selectedValue={idModelo} onValueChange={setIdModelo}>{modelos.map(m => <Picker.Item key={m.idModelo} label={m.modelo} value={m.idModelo} />)}</Picker></View>
         <Text style={styles.label}>Tecido *</Text>
-        <View style={styles.pickerContainer}><Picker selectedValue={idTecido} onValueChange={setIdTecido}>{tecidos.map(t => <Picker.Item key={t.idTecido} label={t.tipoTecido} value={t.idTecido}/>)}</Picker></View>
+        <View style={styles.pickerContainer}><Picker selectedValue={idTecido} onValueChange={setIdTecido}>{tecidos.map(t => <Picker.Item key={t.idTecido} label={t.tipoTecido} value={t.idTecido} />)}</Picker></View>
         <Text style={styles.label}>Status *</Text>
-        <View style={styles.pickerContainer}><Picker selectedValue={idStatus} onValueChange={setIdStatus}><Picker.Item label="Disponível" value={1} /><Picker.Item label="Indisponível" value={2} /></Picker></View>
+        <View style={styles.pickerContainer}><Picker selectedValue={idStatus} onValueChange={setIdStatus}>{statusOptions.map(s => <Picker.Item key={s.value} label={s.label} value={s.value} />)}</Picker></View>
 
         <View style={styles.sizeSection}>
             <Text style={styles.label}>Tamanhos e Estoque</Text>
             {tamanhosQuantidades.map((tq, idx) => (
             <View key={idx} style={styles.sizeRow}>
-                <TextInput style={[styles.input, styles.sizeInput]} placeholder="Tamanho (Ex: P, M, G)" value={tq.tamanho} onChangeText={text => atualizarTamanho(idx, 'tamanho', text)} />
-                <TextInput style={[styles.input, styles.sizeInput]} placeholder="Qtd." value={String(tq.quantidade)} onChangeText={text => atualizarTamanho(idx, 'quantidade', text)} keyboardType="numeric" />
+                <TextInput style={[styles.input, styles.sizeInput]} placeholder="Tamanho" value={tq.tamanho} onChangeText={t => atualizarTamanho(idx, 'tamanho', t)} />
+                <TextInput style={[styles.input, styles.sizeInput]} placeholder="Qtd." value={String(tq.quantidade)} onChangeText={t => atualizarTamanho(idx, 'quantidade', t)} keyboardType="numeric" />
                 <TouchableOpacity style={styles.removeButton} onPress={() => removerTamanho(idx)}><Ionicons name="trash-outline" size={22} color="#D0021B" /></TouchableOpacity>
             </View>
             ))}
@@ -204,20 +286,23 @@ export default function TelaAtualizar({ route, navigation }: any) {
     </SafeAreaView>
   );
 }
-
-// Estilos (sem alteração)
+// Estilos
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: '#FFF' },
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomColor: '#EEE', borderBottomWidth: 1, backgroundColor: '#FFF'},
-    menuButton: { padding: 5, marginRight: 15 },
+    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomColor: '#EEE', borderBottomWidth: 1 },
+    backButton: { padding: 5, marginRight: 15 },
     headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#2F2F2F' },
-    centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7F9FC' },
-    container: { padding: 20, paddingBottom: 40, backgroundColor: '#FFF' },
-    imagePickerContainer: { alignItems: 'center', marginBottom: 24 },
-    previewImagem: { width: 150, height: 150, borderRadius: 75, borderWidth: 3, borderColor: '#4A90E2' },
-    imageOverlay: { position: 'absolute', bottom: 5, right: 5, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20 },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    container: { padding: 20, paddingBottom: 40 },
+    imagePickerContainer: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 24, gap: 10 },
+    previewImageWrapper: { position: 'relative' },
+    previewImagem: { width: 100, height: 100, borderRadius: 12, borderWidth: 1, borderColor: '#DDD' },
+    imageOverlayRemoved: { position: 'absolute', width: 100, height: 100, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+    removeImageButton: { position: 'absolute', top: -5, right: -5, backgroundColor: 'white', borderRadius: 14 },
+    imagePlaceholder: { width: 100, height: 100, borderRadius: 12, borderWidth: 2, borderColor: '#DDD', borderStyle: 'dashed', backgroundColor: '#F7F9FC', justifyContent: 'center', alignItems: 'center' },
     label: { fontSize: 16, fontWeight: '600', color: '#333', marginTop: 16, marginBottom: 8 },
     input: { borderWidth: 1, borderColor: '#DDD', backgroundColor: '#F7F9FC', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, fontSize: 16 },
+    textArea: { height: 100, textAlignVertical: 'top' },
     pickerContainer: { borderWidth: 1, borderColor: '#DDD', backgroundColor: '#F7F9FC', borderRadius: 12, overflow: 'hidden' },
     sizeSection: { marginTop: 24 },
     sizeRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 },
@@ -228,7 +313,7 @@ const styles = StyleSheet.create({
     submitButton: { backgroundColor: '#4A90E2', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 32 },
     submitButtonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
     modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
-    modalContent: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, width: '85%', elevation: 10, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10 },
+    modalContent: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, width: '85%' },
     modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
     modalOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
     modalOptionText: { fontSize: 18, color: '#4A90E2', marginLeft: 15 },
